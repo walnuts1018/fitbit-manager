@@ -1,1 +1,1 @@
-# Fitbit-Manager
+# fitbit-manager
