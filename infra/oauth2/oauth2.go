@@ -2,8 +2,10 @@ package oauth2
 
 import (
 	"context"
+	"time"
 
 	"github.com/walnuts1018/fitbit-manager/config"
+	"github.com/walnuts1018/fitbit-manager/domain"
 	"golang.org/x/oauth2"
 )
 
@@ -28,27 +30,38 @@ var (
 	}
 )
 
-func newOAuth2Conf() *oauth2.Config {
-	config := &oauth2.Config{
-		ClientID:     config.ClientID,
-		ClientSecret: config.ClientSecret,
-		Endpoint:     oauth2.Endpoint{AuthURL: AuthEndpoint, TokenURL: TokenEndpoint},
-		Scopes:       scopes,
-	}
-	return config
+type client struct {
+	cfg *oauth2.Config
 }
 
-func Auth(state string) string {
-	conf := newOAuth2Conf()
-	url := conf.AuthCodeURL(state, oauth2.AccessTypeOffline)
+func NewOauth2Client() domain.Oauth2Client {
+	return &client{
+		cfg: &oauth2.Config{
+			ClientID:     config.ClientID,
+			ClientSecret: config.ClientSecret,
+			Endpoint:     oauth2.Endpoint{AuthURL: AuthEndpoint, TokenURL: TokenEndpoint},
+			Scopes:       scopes,
+		},
+	}
+}
+
+func (c client) Auth(state string) string {
+	url := c.cfg.AuthCodeURL(state, oauth2.AccessTypeOffline)
 	return url
 }
 
-func Callback(ctx context.Context, code string) (string, error) {
-	conf := newOAuth2Conf()
-	token, err := conf.Exchange(ctx, code)
+func (c client) Callback(ctx context.Context, code string) (domain.OAuth2Token, error) {
+	token, err := c.cfg.Exchange(ctx, code)
 	if err != nil {
-		return "", err
+		return domain.OAuth2Token{}, err
 	}
-	return token.AccessToken, nil
+
+	cfg := domain.OAuth2Token{
+		AccessToken:  token.AccessToken,
+		RefreshToken: token.RefreshToken,
+		Expiry:       token.Expiry,
+		CreatedAt:    time.Now(),
+		UpdatedAt:    time.Now(),
+	}
+	return cfg, nil
 }

@@ -10,18 +10,20 @@ import (
 )
 
 var (
-	ClientID      string
-	ClientSecret  string
-	CookieSecret  string
-	RedisEndpoint string
-	RedisPassword string
-	Port          string
+	ClientID     string
+	ClientSecret string
+	CookieSecret string
+	PSQLEndpoint string
+	PSQLPort     string
+	PSQLDatabase string
+	PSQLUser     string
+	PSQLPassword string
+	ServerPort   string
 )
 
 func LoadConfig() error {
-	port := flag.String("port", "8080", "server port")
+	serverport := flag.String("port", "8080", "server port")
 	flag.Parse()
-	slog.Info(fmt.Sprintf("port: %v", *port))
 
 	err := godotenv.Load(".env")
 	if err != nil {
@@ -43,21 +45,38 @@ func LoadConfig() error {
 		return fmt.Errorf("COOKIE_SECRET is not set")
 	}
 
-	redisEndpoint, ok := os.LookupEnv("REDIS_ENDPOINT")
+	psqlEndpoint, ok := os.LookupEnv("PSQL_ENDPOINT")
 	if !ok {
-		return fmt.Errorf("REDIS_ENDPOINT is not set")
+		return fmt.Errorf("PSQL_ENDPOINT is not set")
+	}
+	psqlPort, ok := os.LookupEnv("PSQL_PORT")
+	if !ok {
+		return fmt.Errorf("PSQL_PORT is not set")
 	}
 
-	redisPassword, ok := os.LookupEnv("REDIS_PASSWORD")
+	psqlDatabase, ok := os.LookupEnv("PSQL_DATABASE")
 	if !ok {
-		return fmt.Errorf("REDIS_PASSWORD is not set")
+		return fmt.Errorf("PSQL_DATABASE is not set")
+	}
+
+	psqlUser, ok := os.LookupEnv("PSQL_USER")
+	if !ok {
+		return fmt.Errorf("PSQL_USER is not set")
+	}
+
+	psqlPassword, ok := os.LookupEnv("PSQL_PASSWORD")
+	if !ok {
+		return fmt.Errorf("PSQL_PASSWORD is not set")
 	}
 
 	ClientID = cid
 	ClientSecret = cs
 	CookieSecret = cookieSecret
-	RedisEndpoint = redisEndpoint
-	RedisPassword = redisPassword
-	Port = *port
+	PSQLEndpoint = psqlEndpoint
+	PSQLPort = psqlPort
+	PSQLDatabase = psqlDatabase
+	PSQLUser = psqlUser
+	PSQLPassword = psqlPassword
+	ServerPort = *serverport
 	return nil
 }

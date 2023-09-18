@@ -1,0 +1,59 @@
+package psql
+
+import (
+	"database/sql"
+	"fmt"
+
+	_ "github.com/lib/pq"
+	"github.com/walnuts1018/fitbit-manager/config"
+	"github.com/walnuts1018/fitbit-manager/domain"
+)
+
+const (
+	sslMode = "disable"
+)
+
+type client struct {
+	db *sql.DB
+}
+
+func NewPSQLClient() (domain.TokenStore, error) {
+	db, err := sql.Open("postgres", fmt.Sprintf("host=%v port=%v user=%v password=%v dbname=%v sslmode=%v", config.PSQLEndpoint, config.PSQLPort, config.PSQLUser, config.PSQLPassword, config.PSQLDatabase, sslMode))
+	if err != nil {
+		return client{}, fmt.Errorf("failed to open db: %v", err)
+	}
+
+	return client{db: db}, nil
+}
+
+func (c client) Close() error {
+	return c.db.Close()
+}
+
+func (c client) SaveOAuth2Token(token domain.OAuth2Token) error {
+	_, err := c.db.Exec(`CREATE TABLE IF NOT EXISTS oauth2_config (
+		access_token VARCHAR(255) NOT NULL,
+		refresh_token VARCHAR(255) NOT NULL,
+		expiry TIMESTAMP NOT NULL,
+		created_at TIMESTAMP NULL,
+		updated_at TIMESTAMP NULL
+	)`)
+	if err != nil {
+		return fmt.Errorf("failed to create oauth2_config table: %v", err)
+	}
+
+	_, err = c.db.Exec("INSERT INTO oauth2_config (access_token, refresh_token, expiry, created_at, updated_at) VALUES ($1, $2, $3, $4, $5)", token.AccessToken, token.RefreshToken, token.Expiry, token.CreatedAt, token.UpdatedAt)
+	if err != nil {
+		return fmt.Errorf("failed to insert oauth2_config: %v", err)
+	}
+	return nil
+}
+
+func (c client) GetOAuth2Token() (domain.OAuth2Token, error) {
+	var token domain.OAuth2Token
+	err := c.db.QueryRow("SELECT access_token, refresh_token, expiry, created_at, updated_at FROM oauth2_config").Scan(&token.AccessToken, &token.RefreshToken, &token.Expiry, &token.CreatedAt, &token.UpdatedAt)
+	if err != nil {
+		return domain.OAuth2Token{}, fmt.Errorf("failed to get oauth2_config: %v", err)
+	}
+	return token, nil
+}
