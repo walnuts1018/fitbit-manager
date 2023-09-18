@@ -1,13 +1,14 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"os"
 
 	"github.com/walnuts1018/fitbit-manager/config"
 	"github.com/walnuts1018/fitbit-manager/handler"
-	"github.com/walnuts1018/fitbit-manager/infra/oauth2"
+	"github.com/walnuts1018/fitbit-manager/infra/fitbit"
 	"github.com/walnuts1018/fitbit-manager/infra/psql"
 	"github.com/walnuts1018/fitbit-manager/usecase"
 )
@@ -18,6 +19,9 @@ func main() {
 		slog.Error("Error loading config: %v", "error", err)
 		os.Exit(1)
 	}
+
+	ctx := context.Background()
+
 	psqlClient, err := psql.NewPSQLClient()
 	if err != nil {
 		slog.Error("failed to connect to psql", "error", err)
@@ -25,11 +29,16 @@ func main() {
 	}
 	defer psqlClient.Close()
 
-	oauth2Client := oauth2.NewOauth2Client()
+	oauth2Client := fitbit.NewOauth2Client()
 
-	tokenUsecase := usecase.NewTokenUsecase(oauth2Client, psqlClient)
+	usecase := usecase.NewUsecase(oauth2Client, psqlClient)
 
-	handler, err := handler.NewHandler(tokenUsecase)
+	err = usecase.NewFitbitClient(ctx)
+	if err != nil {
+		slog.Warn("failed to create fitbit client", "error", err)
+	}
+
+	handler, err := handler.NewHandler(usecase)
 	if err != nil {
 		slog.Error("Error loading handler: %v", "error", err)
 		os.Exit(1)

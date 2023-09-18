@@ -1,7 +1,8 @@
-package oauth2
+package fitbit
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/walnuts1018/fitbit-manager/config"
 	"github.com/walnuts1018/fitbit-manager/domain"
@@ -31,10 +32,11 @@ var (
 )
 
 type client struct {
-	cfg *oauth2.Config
+	cfg     *oauth2.Config
+	fclient *http.Client //fitbit client
 }
 
-func NewOauth2Client() domain.Oauth2Client {
+func NewOauth2Client() domain.FitbitClient {
 	return &client{
 		cfg: &oauth2.Config{
 			ClientID:     config.ClientID,
@@ -45,12 +47,12 @@ func NewOauth2Client() domain.Oauth2Client {
 	}
 }
 
-func (c client) Auth(state string) string {
+func (c *client) Auth(state string) string {
 	url := c.cfg.AuthCodeURL(state, oauth2.AccessTypeOffline)
 	return url
 }
 
-func (c client) Callback(ctx context.Context, code string) (domain.OAuth2Token, error) {
+func (c *client) Callback(ctx context.Context, code string) (domain.OAuth2Token, error) {
 	token, err := c.cfg.Exchange(ctx, code)
 	if err != nil {
 		return domain.OAuth2Token{}, err

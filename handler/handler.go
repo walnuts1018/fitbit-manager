@@ -12,11 +12,11 @@ import (
 )
 
 var (
-	tokenUsecase *usecase.TokenUsecase
+	uc *usecase.Usecase
 )
 
-func NewHandler(usecase *usecase.TokenUsecase) (*gin.Engine, error) {
-	tokenUsecase = usecase
+func NewHandler(usecase *usecase.Usecase) (*gin.Engine, error) {
+	uc = usecase
 
 	r := gin.Default()
 	store := cookie.NewStore([]byte(config.CookieSecret))
@@ -26,12 +26,17 @@ func NewHandler(usecase *usecase.TokenUsecase) (*gin.Engine, error) {
 
 	r.GET("/signin", signIn)
 	r.GET("/callback", callback)
+
+	v1 := r.Group("/v1")
+	{
+		v1.GET("/profile", getProfile)
+	}
 	return r, nil
 }
 
 func signIn(ctx *gin.Context) {
 	session := sessions.Default(ctx)
-	state, redirect, err := tokenUsecase.SignIn()
+	state, redirect, err := uc.SignIn()
 	if err != nil {
 		ctx.HTML(http.StatusInternalServerError, "result.html", gin.H{
 			"result": "error",
@@ -56,7 +61,7 @@ func callback(ctx *gin.Context) {
 		})
 		return
 	}
-	err := tokenUsecase.Callback(ctx, code)
+	err := uc.Callback(ctx, code)
 	if err != nil {
 		ctx.HTML(http.StatusInternalServerError, "result.html", gin.H{
 			"result": "error",
@@ -65,7 +70,20 @@ func callback(ctx *gin.Context) {
 		return
 	}
 
+	err = uc.NewFitbitClient(ctx)
+	if err != nil {
+		ctx.HTML(http.StatusInternalServerError, "result.html", gin.H{
+			"result": "error",
+			"error":  fmt.Sprintf("failed to create fitbit client: %v", err),
+		})
+		return
+	}
+
 	ctx.HTML(http.StatusOK, "result.html", gin.H{
 		"result": "success",
 	})
+}
+
+func getProfile(ctx *gin.Context) {
+	uc.GetName(ctx)
 }

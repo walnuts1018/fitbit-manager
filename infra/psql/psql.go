@@ -57,3 +57,11 @@ func (c client) GetOAuth2Token() (domain.OAuth2Token, error) {
 	}
 	return token, nil
 }
+
+func (c client) UpdateOAuth2Token(token domain.OAuth2Token) error {
+	_, err := c.db.Exec("UPDATE oauth2_config SET access_token = $1, refresh_token = $2, expiry = $3, updated_at = $4", token.AccessToken, token.RefreshToken, token.Expiry, token.UpdatedAt)
+	if err != nil {
+		return fmt.Errorf("failed to update oauth2_config: %v", err)
+	}
+	return nil
+}

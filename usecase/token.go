@@ -8,19 +8,19 @@ import (
 	"github.com/walnuts1018/fitbit-manager/domain"
 )
 
-type TokenUsecase struct {
-	oauth2Client domain.Oauth2Client
+type Usecase struct {
+	oauth2Client domain.FitbitClient
 	tokenStore   domain.TokenStore
 }
 
-func NewTokenUsecase(oauth2Client domain.Oauth2Client, tokenStore domain.TokenStore) *TokenUsecase {
-	return &TokenUsecase{
+func NewUsecase(oauth2Client domain.FitbitClient, tokenStore domain.TokenStore) *Usecase {
+	return &Usecase{
 		oauth2Client: oauth2Client,
 		tokenStore:   tokenStore,
 	}
 }
 
-func (u TokenUsecase) Callback(ctx context.Context, code string) error {
+func (u Usecase) Callback(ctx context.Context, code string) error {
 	cfg, err := u.oauth2Client.Callback(ctx, code)
 	if err != nil {
 		return fmt.Errorf("failed to get oauth2 config: %w", err)
@@ -34,7 +34,7 @@ func (u TokenUsecase) Callback(ctx context.Context, code string) error {
 	return nil
 }
 
-func (u TokenUsecase) SignIn() (string, string, error) {
+func (u Usecase) SignIn() (string, string, error) {
 	state, err := randStr(64)
 	if err != nil {
 		return "", "", fmt.Errorf("failed to generate random string: %w", err)
