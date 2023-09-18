@@ -2,10 +2,10 @@ package oauth2
 
 import (
 	"context"
-	"time"
 
 	"github.com/walnuts1018/fitbit-manager/config"
 	"github.com/walnuts1018/fitbit-manager/domain"
+	"github.com/walnuts1018/fitbit-manager/infra/timeJST"
 	"golang.org/x/oauth2"
 )
 
@@ -60,8 +60,8 @@ func (c client) Callback(ctx context.Context, code string) (domain.OAuth2Token, 
 		AccessToken:  token.AccessToken,
 		RefreshToken: token.RefreshToken,
 		Expiry:       token.Expiry,
-		CreatedAt:    time.Now(),
-		UpdatedAt:    time.Now(),
+		CreatedAt:    timeJST.Now(),
+		UpdatedAt:    timeJST.Now(),
 	}
 	return cfg, nil
 }

@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>OAuth {{.result}}</title>
+        <link rel="stylesheet" href="assets/result.css">
+    </head>
+    <body>
+        <div class="card">
+            {{if eq .result "success"}}
+                <h2>Thank you!</h2>
+                <p>You have successfully authorized this application.<br>You can close this window now.</p>
+            {{else if eq .result "error"}}
+                <h2>Oops!</h2>
+                <p>An error occurred while authorizing this application.<br>Please try again.</p>
+                <p class="error">
+                    error: {{.error}}
+                </p>
+            {{end}}
+        </div>
+    </body>
+</html>

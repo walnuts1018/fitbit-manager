@@ -32,11 +32,11 @@ func (c client) Close() error {
 
 func (c client) SaveOAuth2Token(token domain.OAuth2Token) error {
 	_, err := c.db.Exec(`CREATE TABLE IF NOT EXISTS oauth2_config (
-		access_token VARCHAR(255) NOT NULL,
-		refresh_token VARCHAR(255) NOT NULL,
-		expiry TIMESTAMP NOT NULL,
-		created_at TIMESTAMP NULL,
-		updated_at TIMESTAMP NULL
+		access_token TEXT NOT NULL,
+		refresh_token TEXT NOT NULL,
+		expiry TIMESTAMPTZ NOT NULL,
+		created_at TIMESTAMPTZ NULL,
+		updated_at TIMESTAMPTZ NULL
 	)`)
 	if err != nil {
 		return fmt.Errorf("failed to create oauth2_config table: %v", err)

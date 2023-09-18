@@ -1,0 +1,13 @@
+version: '3'
+services:
+  postgres:
+    image: postgres:16
+    container_name: psql
+    ports: 
+      - "5432:5432"
+    volumes:
+      - ./psql:/docker-entrypoint-initdb.d
+    environment:
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "postgres"
+

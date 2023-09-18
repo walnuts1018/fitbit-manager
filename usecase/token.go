@@ -30,6 +30,7 @@ func (u TokenUsecase) Callback(ctx context.Context, code string) error {
 	if err != nil {
 		return fmt.Errorf("failed to save oauth2 token: %w", err)
 	}
+
 	return nil
 }
 
