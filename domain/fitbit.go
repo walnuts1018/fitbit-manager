@@ -17,5 +17,5 @@ type FitbitClient interface {
 	Auth(state string) string
 	Callback(ctx context.Context, code string) (OAuth2Token, error)
 	NewFitbitClient(ctx context.Context, tokenStore TokenStore) error
-	GetHeartNow(ctx context.Context) (int, time.Time, error)
+	GetHeart(ctx context.Context, startTime time.Time, endTime time.Time) (int, time.Time, error)
 }

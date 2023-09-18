@@ -6,5 +6,6 @@ import (
 )
 
 func (u Usecase) GetHeartNow(ctx context.Context) (int, time.Time, error) {
-	return u.oauth2Client.GetHeartNow(ctx)
+	now := time.Now()
+	return u.oauth2Client.GetHeart(ctx, now, now.Add(-1*time.Hour))
 }

@@ -106,7 +106,7 @@ type heartResult struct {
 	} `json:"activities-heart-intraday"`
 }
 
-func (c *client) GetHeartNow(ctx context.Context) (int, time.Time, error) {
+func (c *client) GetHeart(ctx context.Context, startTime time.Time, endTime time.Time) (int, time.Time, error) {
 	if c.fclient == nil {
 		return 0, time.Time{}, fmt.Errorf("fitbit client is nil")
 	}
@@ -116,8 +116,7 @@ func (c *client) GetHeartNow(ctx context.Context) (int, time.Time, error) {
 		return c.heartCache.heart, c.heartCache.dataAt, nil
 	}
 
-	hourbefore := now.Add(-1 * time.Hour)
-	endpoint := fmt.Sprintf("https://api.fitbit.com/1/user/-/activities/heart/date/%v/%v/1sec/time/%v/%v.json", hourbefore.Format("2006-01-02"), now.Format("2006-01-02"), hourbefore.Format("15:04"), now.Format("15:04"))
+	endpoint := fmt.Sprintf("https://api.fitbit.com/1/user/-/activities/heart/date/%v/%v/1sec/time/%v/%v.json", startTime.Format("2006-01-02"), endTime.Format("2006-01-02"), startTime.Format("15:04"), endTime.Format("15:04"))
 	resp, err := c.fclient.Get(endpoint)
 	if err != nil {
 		return 0, time.Time{}, fmt.Errorf("failed to get heart rate: %w", err)
@@ -144,13 +143,9 @@ func (c *client) GetHeartNow(ctx context.Context) (int, time.Time, error) {
 	if err != nil {
 		return 0, time.Time{}, fmt.Errorf("failed to parse time: %w", err)
 	}
-	d := now.Sub(dtime)
-	if d < (10 * time.Minute) {
-		c.heartCache.heart = data.Value
-		c.heartCache.dataAt = dtime
-		c.heartCache.UpdatedAt = now
-		return data.Value, dtime, nil
-	} else {
-		return 0, time.Time{}, nil
-	}
+
+	c.heartCache.heart = data.Value
+	c.heartCache.dataAt = dtime
+	c.heartCache.UpdatedAt = now
+	return data.Value, dtime, nil
 }
