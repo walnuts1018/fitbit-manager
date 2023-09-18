@@ -18,7 +18,7 @@ type client struct {
 }
 
 func NewPSQLClient() (domain.TokenStore, error) {
-	db, err := sql.Open("postgres", fmt.Sprintf("host=%v port=%v user=%v password=%v dbname=%v sslmode=%v", config.PSQLEndpoint, config.PSQLPort, config.PSQLUser, config.PSQLPassword, config.PSQLDatabase, sslMode))
+	db, err := sql.Open("postgres", fmt.Sprintf("host=%v port=%v user=%v password=%v dbname=%v sslmode=%v", config.Config.PSQLEndpoint, config.Config.PSQLPort, config.Config.PSQLUser, config.Config.PSQLPassword, config.Config.PSQLDatabase, sslMode))
 	if err != nil {
 		return client{}, fmt.Errorf("failed to open db: %v", err)
 	}

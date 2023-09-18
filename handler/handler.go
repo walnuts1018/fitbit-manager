@@ -19,7 +19,7 @@ func NewHandler(usecase *usecase.Usecase) (*gin.Engine, error) {
 	uc = usecase
 
 	r := gin.Default()
-	store := cookie.NewStore([]byte(config.CookieSecret))
+	store := cookie.NewStore([]byte(config.Config.CookieSecret))
 	r.Use(sessions.Sessions("FitbitManager", store))
 	r.Static("/assets", "./assets")
 	r.LoadHTMLGlob("templates/*")

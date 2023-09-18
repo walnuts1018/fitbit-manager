@@ -45,8 +45,8 @@ type client struct {
 func NewOauth2Client() domain.FitbitClient {
 	return &client{
 		cfg: &oauth2.Config{
-			ClientID:     config.ClientID,
-			ClientSecret: config.ClientSecret,
+			ClientID:     config.Config.ClientID,
+			ClientSecret: config.Config.ClientSecret,
 			Endpoint:     oauth2.Endpoint{AuthURL: AuthEndpoint, TokenURL: TokenEndpoint},
 			Scopes:       scopes,
 		},

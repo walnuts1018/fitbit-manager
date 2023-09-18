@@ -43,7 +43,7 @@ func main() {
 		slog.Error("Error loading handler: %v", "error", err)
 		os.Exit(1)
 	}
-	err = handler.Run(fmt.Sprintf(":%v", config.ServerPort))
+	err = handler.Run(fmt.Sprintf(":%v", config.Config.ServerPort))
 	if err != nil {
 		slog.Error("failed to run handler", "error", err)
 		os.Exit(1)
