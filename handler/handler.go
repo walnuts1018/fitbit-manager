@@ -29,7 +29,7 @@ func NewHandler(usecase *usecase.Usecase) (*gin.Engine, error) {
 
 	v1 := r.Group("/v1")
 	{
-		v1.GET("/profile", getProfile)
+		v1.GET("/heart", getHeart)
 	}
 	return r, nil
 }
@@ -84,6 +84,16 @@ func callback(ctx *gin.Context) {
 	})
 }
 
-func getProfile(ctx *gin.Context) {
-	uc.GetName(ctx)
+func getHeart(ctx *gin.Context) {
+	heart, t, err := uc.GetHeartNow(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"error": fmt.Sprintf("failed to get heart: %v", err),
+		})
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{
+		"heart": heart,
+		"time":  t,
+	})
 }
