@@ -97,49 +97,27 @@ type heartResult struct {
 		Value string `json:"value"`
 	} `json:"activities-heart"`
 	ActivitiesHeartIntraday struct {
-		DataSet []struct {
-			Time  string `json:"time"`
-			Value int    `json:"value"`
-		} `json:"dataset"`
-		DatasetInterval int    `json:"datasetInterval"`
-		DatasetType     string `json:"datasetType"`
+		DataSet         []domain.HeartData `json:"dataset"`
+		DatasetInterval int                `json:"datasetInterval"`
+		DatasetType     string             `json:"datasetType"`
 	} `json:"activities-heart-intraday"`
 }
 
-func (c *client) GetHeart(ctx context.Context, startTime time.Time, endTime time.Time) (int, time.Time, error) {
-	if c.fclient == nil {
-		return 0, time.Time{}, fmt.Errorf("fitbit client is nil")
-	}
+func (c *client) GetHeartNow(ctx context.Context) (int, time.Time, error) {
+
 	now := timeJST.Now()
 	if c.heartCache.UpdatedAt.Add(1 * time.Minute).After(now) {
 		slog.Info("use cache")
 		return c.heartCache.heart, c.heartCache.dataAt, nil
 	}
 
-	endpoint := fmt.Sprintf("https://api.fitbit.com/1/user/-/activities/heart/date/%v/%v/1sec/time/%v/%v.json", startTime.Format("2006-01-02"), endTime.Format("2006-01-02"), startTime.Format("15:04"), endTime.Format("15:04"))
-	fmt.Printf(endpoint)
-	resp, err := c.fclient.Get(endpoint)
+	hourBefore := now.Add(-1 * time.Hour)
+	datas, err := c.GetHeart(ctx, hourBefore, now, domain.HeartDetailOneSecond)
 	if err != nil {
 		return 0, time.Time{}, fmt.Errorf("failed to get heart rate: %w", err)
 	}
-	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		return 0, time.Time{}, fmt.Errorf("failed to get heart rate: %v", resp.Status)
-	}
-
-	raw, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return 0, time.Time{}, fmt.Errorf("failed to read response body: %w", err)
-	}
-
-	var heart heartResult
-	err = json.Unmarshal(raw, &heart)
-	if err != nil {
-		return 0, time.Time{}, fmt.Errorf("failed to unmarshal response body: %w", err)
-	}
-
-	data := heart.ActivitiesHeartIntraday.DataSet[len(heart.ActivitiesHeartIntraday.DataSet)-1]
+	data := datas[len(datas)-1]
 	dtime, err := time.Parse("2006-01-02 15:04:05", now.Format("2006-01-02 ")+data.Time)
 	if err != nil {
 		return 0, time.Time{}, fmt.Errorf("failed to parse time: %w", err)
@@ -149,4 +127,32 @@ func (c *client) GetHeart(ctx context.Context, startTime time.Time, endTime time
 	c.heartCache.dataAt = dtime
 	c.heartCache.UpdatedAt = now
 	return data.Value, dtime, nil
+}
+
+func (c *client) GetHeart(ctx context.Context, from, to time.Time, detail domain.HeartDetail) ([]domain.HeartData, error) {
+	if c.fclient == nil {
+		return nil, fmt.Errorf("fitbit client is nil")
+	}
+	endpoint := fmt.Sprintf("https://api.fitbit.com/1/user/-/activities/heart/date/%v/%v/%v/time/%v/%v.json", from.Format("2006-01-02"), to.Format("2006-01-02"), detail, from.Format("15:04"), to.Format("15:04"))
+	resp, err := c.fclient.Get(endpoint)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get heart rate: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("failed to get heart rate: %v", resp.Status)
+	}
+
+	raw, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response body: %w", err)
+	}
+
+	var heart heartResult
+	err = json.Unmarshal(raw, &heart)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal response body: %w", err)
+	}
+	return heart.ActivitiesHeartIntraday.DataSet, nil
 }

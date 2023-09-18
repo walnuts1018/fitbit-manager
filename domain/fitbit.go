@@ -17,5 +17,20 @@ type FitbitClient interface {
 	Auth(state string) string
 	Callback(ctx context.Context, code string) (OAuth2Token, error)
 	NewFitbitClient(ctx context.Context, tokenStore TokenStore) error
-	GetHeart(ctx context.Context, startTime time.Time, endTime time.Time) (int, time.Time, error)
+	GetHeartNow(ctx context.Context) (int, time.Time, error)
+	GetHeart(ctx context.Context, from, to time.Time, detail HeartDetail) ([]HeartData, error)
 }
+
+type HeartData struct {
+	Time  string `json:"time"`
+	Value int    `json:"value"`
+}
+
+type HeartDetail string
+
+const (
+	HeartDetailOneSecond     HeartDetail = "1sec"
+	HeartDetailOneMinute     HeartDetail = "1min"
+	HeartDetailFiveMinute    HeartDetail = "5min"
+	HeartDetailFifteenMinute HeartDetail = "15min"
+)

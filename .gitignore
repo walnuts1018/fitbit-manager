@@ -24,3 +24,4 @@ go.work
 token
 .env
 fitbit-manager
+out/

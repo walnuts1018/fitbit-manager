@@ -11,3 +11,18 @@ services:
       POSTGRES_USER: "postgres"
       POSTGRES_PASSWORD: "postgres"
 
+  influxdb:
+    image: influxdb:2.7
+    container_name: influxdb
+    ports:
+      - 8086:8086
+    volumes:
+      - ./influxdb:/docker-entrypoint-initdb.d
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=admin
+      - DOCKER_INFLUXDB_INIT_PASSWORD=password
+      - DOCKER_INFLUXDB_INIT_ORG=admin
+      - DOCKER_INFLUXDB_INIT_RETENTION=1w
+      - DOCKER_INFLUXDB_INIT_BUCKET=fitbit_manager
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=token
