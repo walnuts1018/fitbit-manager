@@ -117,6 +117,7 @@ func (c *client) GetHeart(ctx context.Context, startTime time.Time, endTime time
 	}
 
 	endpoint := fmt.Sprintf("https://api.fitbit.com/1/user/-/activities/heart/date/%v/%v/1sec/time/%v/%v.json", startTime.Format("2006-01-02"), endTime.Format("2006-01-02"), startTime.Format("15:04"), endTime.Format("15:04"))
+	fmt.Printf(endpoint)
 	resp, err := c.fclient.Get(endpoint)
 	if err != nil {
 		return 0, time.Time{}, fmt.Errorf("failed to get heart rate: %w", err)
