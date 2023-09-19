@@ -17,13 +17,13 @@ type FitbitClient interface {
 	Auth(state string) string
 	Callback(ctx context.Context, code string) (OAuth2Token, error)
 	NewFitbitClient(ctx context.Context, tokenStore TokenStore) error
-	GetHeartNow(ctx context.Context) (int, time.Time, error)
-	GetHeart(ctx context.Context, from, to time.Time, detail HeartDetail) ([]HeartData, error)
+	GetHeartIntraday(date string, startTime string, endTime string, detail HeartDetail) ([]HeartData, error)
 }
 
 type HeartData struct {
-	Time  string `json:"time"`
-	Value int    `json:"value"`
+	Datatime time.Time
+	Time     string `json:"time"`
+	Value    int    `json:"value"`
 }
 
 type HeartDetail string

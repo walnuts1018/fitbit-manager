@@ -3,7 +3,6 @@ package fitbit
 import (
 	"context"
 	"net/http"
-	"time"
 
 	"github.com/walnuts1018/fitbit-manager/config"
 	"github.com/walnuts1018/fitbit-manager/domain"
@@ -33,13 +32,8 @@ var (
 )
 
 type client struct {
-	cfg        *oauth2.Config
-	fclient    *http.Client //fitbit client
-	heartCache struct {
-		heart     int
-		dataAt    time.Time
-		UpdatedAt time.Time
-	}
+	cfg     *oauth2.Config
+	fclient *http.Client //fitbit client
 }
 
 func NewOauth2Client() domain.FitbitClient {

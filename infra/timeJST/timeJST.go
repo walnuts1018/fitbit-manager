@@ -9,3 +9,5 @@ func Now() time.Time {
 	}
 	return time.Now().In(jst)
 }
+
+var JTC = time.FixedZone("JST", 9*60*60)

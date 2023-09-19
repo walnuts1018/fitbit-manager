@@ -9,6 +9,7 @@ import (
 	"github.com/walnuts1018/fitbit-manager/config"
 	"github.com/walnuts1018/fitbit-manager/handler"
 	"github.com/walnuts1018/fitbit-manager/infra/fitbit"
+	"github.com/walnuts1018/fitbit-manager/infra/influxdb"
 	"github.com/walnuts1018/fitbit-manager/infra/psql"
 	"github.com/walnuts1018/fitbit-manager/usecase"
 )
@@ -31,12 +32,21 @@ func main() {
 
 	oauth2Client := fitbit.NewOauth2Client()
 
-	usecase := usecase.NewUsecase(oauth2Client, psqlClient)
+	influxdbClient := influxdb.NewClient()
+
+	usecase := usecase.NewUsecase(oauth2Client, psqlClient, influxdbClient)
 
 	err = usecase.NewFitbitClient(ctx)
 	if err != nil {
 		slog.Warn("failed to create fitbit client", "error", err)
 	}
+
+	go func() {
+		err := usecase.RecordHeart(ctx)
+		if err != nil {
+			slog.Error("Failed to record heart", "error", err)
+		}
+	}()
 
 	handler, err := handler.NewHandler(usecase)
 	if err != nil {
