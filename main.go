@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"time"
 
 	"github.com/walnuts1018/fitbit-manager/config"
 	"github.com/walnuts1018/fitbit-manager/handler"
@@ -33,6 +34,7 @@ func main() {
 	oauth2Client := fitbit.NewOauth2Client()
 
 	influxdbClient := influxdb.NewClient()
+	defer influxdbClient.Close()
 
 	usecase := usecase.NewUsecase(oauth2Client, psqlClient, influxdbClient)
 
@@ -42,9 +44,20 @@ func main() {
 	}
 
 	go func() {
-		err := usecase.RecordHeart(ctx)
-		if err != nil {
-			slog.Error("Failed to record heart", "error", err)
+		ticker := time.NewTicker(6 * time.Hour)
+		defer ticker.Stop()
+
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-ticker.C:
+				err := usecase.RecordHeart(ctx)
+				if err != nil {
+					slog.Error("Failed to record heart", "error", err)
+					return
+				}
+			}
 		}
 	}()
 

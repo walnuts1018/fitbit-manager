@@ -21,7 +21,7 @@ type FitbitClient interface {
 }
 
 type HeartData struct {
-	Datatime time.Time
+	Datatime *time.Time
 	Time     string `json:"time"`
 	Value    int    `json:"value"`
 }

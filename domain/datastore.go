@@ -1,5 +1,9 @@
 package domain
 
+import "context"
+
 type DataStore interface {
-	RecordHeart(rates []HeartData) error
+	RecordHeart(ctx context.Context, rates []HeartData) error
+	GetLastHeartData(ctx context.Context) (HeartData, error)
+	Close()
 }

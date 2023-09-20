@@ -2,12 +2,16 @@ package timeJST
 
 import "time"
 
-func Now() time.Time {
+var JST *time.Location
+
+func init() {
 	jst, err := time.LoadLocation("Asia/Tokyo")
 	if err != nil {
 		panic(err)
 	}
-	return time.Now().In(jst)
+	JST = jst
 }
 
-var JTC = time.FixedZone("JST", 9*60*60)
+func Now() time.Time {
+	return time.Now().In(JST)
+}
