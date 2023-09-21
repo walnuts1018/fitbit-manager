@@ -44,6 +44,12 @@ func main() {
 	}
 
 	go func() {
+		err := usecase.RecordHeart(ctx)
+		if err != nil {
+			slog.Error("Failed to record heart", "error", err)
+			return
+		}
+
 		ticker := time.NewTicker(6 * time.Hour)
 		defer ticker.Stop()
 

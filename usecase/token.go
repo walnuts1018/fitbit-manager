@@ -28,6 +28,15 @@ func NewUsecase(oauth2Client domain.FitbitClient, tokenStore domain.TokenStore, 
 	}
 }
 
+func (u *Usecase) SignIn() (string, string, error) {
+	state, err := randStr(64)
+	if err != nil {
+		return "", "", fmt.Errorf("failed to generate random string: %w", err)
+	}
+	redirect := u.oauth2Client.Auth(state)
+	return state, redirect, nil
+}
+
 func (u *Usecase) Callback(ctx context.Context, code string) error {
 	cfg, err := u.oauth2Client.Callback(ctx, code)
 	if err != nil {
@@ -41,16 +50,6 @@ func (u *Usecase) Callback(ctx context.Context, code string) error {
 
 	return nil
 }
-
-func (u *Usecase) SignIn() (string, string, error) {
-	state, err := randStr(64)
-	if err != nil {
-		return "", "", fmt.Errorf("failed to generate random string: %w", err)
-	}
-	redirect := u.oauth2Client.Auth(state)
-	return state, redirect, nil
-}
-
 func randStr(n int) (string, error) {
 	var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
 	b := make([]byte, n)
