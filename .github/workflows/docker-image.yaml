@@ -53,7 +53,7 @@ jobs:
         with:
           push: true
           context: .
-          platforms: linux/arm64
+          platforms: linux/amd64,linux/arm64
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
           tags: |
@@ -66,7 +66,7 @@ jobs:
         with:
           push: true
           context: .
-          platforms: linux/arm64
+          platforms: linux/amd64,linux/arm64
           tags: |
             ghcr.io/walnuts1018/fitbit-manager:test-latest
             ghcr.io/walnuts1018/fitbit-manager:test-${{ github.sha }}-${{ github.run_number }}

@@ -17,7 +17,6 @@ var (
 
 func NewHandler(usecase *usecase.Usecase) (*gin.Engine, error) {
 	uc = usecase
-
 	r := gin.Default()
 	store := cookie.NewStore([]byte(config.Config.CookieSecret))
 	r.Use(sessions.Sessions("FitbitManager", store))
