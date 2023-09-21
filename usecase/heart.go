@@ -86,7 +86,7 @@ func (u *Usecase) RecordHeart(ctx context.Context) error {
 		from := now.Add(-24 * time.Hour)
 		last.Datatime = &from
 	}
-	data, err := u.GetHeart(ctx, *last.Datatime, now.Add(-6*time.Hour), domain.HeartDetailOneMinute)
+	data, err := u.GetHeart(ctx, *last.Datatime, now, domain.HeartDetailOneMinute)
 	if err != nil {
 		return fmt.Errorf("failed to get heart data: %w", err)
 	}
