@@ -14,4 +14,4 @@ WORKDIR /app
 COPY --from=builder /build/fitbit-manager ./
 COPY --from=builder /usr/share/zoneinfo/Asia/Tokyo /usr/share/zoneinfo/Asia/Tokyo
 CMD ["./fitbit-manager"]
-LABEL org.opencontainers.image.source=https://github.com/walnuts1018/fitbit-manager
+LABEL org.opencontainers.image.source = "https://github.com/walnuts1018/fitbit-manager"
