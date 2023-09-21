@@ -9,6 +9,7 @@ import (
 	"github.com/walnuts1018/fitbit-manager/config"
 	"github.com/walnuts1018/fitbit-manager/domain"
 	"github.com/walnuts1018/fitbit-manager/infra/timeJST"
+	"golang.org/x/exp/slog"
 )
 
 type client struct {
@@ -42,6 +43,7 @@ func (c client) RecordHeart(ctx context.Context, hearts []domain.HeartData) erro
 	if err != nil {
 		return fmt.Errorf("failed to flush heart rate: %w", err)
 	}
+	slog.Info("flushed heart rate datas", "count", len(hearts), "data", hearts)
 	return nil
 }
 
