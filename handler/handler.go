@@ -2,6 +2,7 @@ package handler
 
 import (
 	"fmt"
+	"log/slog"
 	"net/http"
 
 	"github.com/gin-contrib/sessions"
@@ -62,18 +63,20 @@ func callback(ctx *gin.Context) {
 	}
 	err := uc.Callback(ctx, code)
 	if err != nil {
+		slog.Error("failed to callback", "error", err)
 		ctx.HTML(http.StatusInternalServerError, "result.html", gin.H{
 			"result": "error",
-			"error":  fmt.Sprintf("failed to callback: %v", err),
+			"error":  "failed to callback",
 		})
 		return
 	}
 
 	err = uc.NewFitbitClient(ctx)
 	if err != nil {
+		slog.Error("failed to create fitbit client", "error", err)
 		ctx.HTML(http.StatusInternalServerError, "result.html", gin.H{
 			"result": "error",
-			"error":  fmt.Sprintf("failed to create fitbit client: %v", err),
+			"error":  "failed to create fitbit client",
 		})
 		return
 	}
@@ -86,8 +89,9 @@ func callback(ctx *gin.Context) {
 func getHeart(ctx *gin.Context) {
 	heart, t, err := uc.GetHeartNow(ctx)
 	if err != nil {
+		slog.Error("failed to get heart", "error", err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"error": fmt.Sprintf("failed to get heart: %v", err),
+			"error": "failed to get heart",
 		})
 		return
 	}

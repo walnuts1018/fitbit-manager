@@ -3,13 +3,13 @@ package influxdb
 import (
 	"context"
 	"fmt"
+	"log/slog"
 
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 	"github.com/influxdata/influxdb-client-go/v2/api"
 	"github.com/walnuts1018/fitbit-manager/config"
 	"github.com/walnuts1018/fitbit-manager/domain"
 	"github.com/walnuts1018/fitbit-manager/infra/timeJST"
-	"golang.org/x/exp/slog"
 )
 
 type client struct {
