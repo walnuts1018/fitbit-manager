@@ -41,7 +41,10 @@ func (c client) SaveOAuth2Token(token domain.OAuth2Token) error {
 	if err != nil {
 		return fmt.Errorf("failed to create oauth2_config table: %v", err)
 	}
-
+	_, err = c.db.Exec("DELETE FROM oauth2_config")
+	if err != nil {
+		return fmt.Errorf("failed to delete oauth2_config: %v", err)
+	}
 	_, err = c.db.Exec("INSERT INTO oauth2_config (access_token, refresh_token, expiry, created_at, updated_at) VALUES ($1, $2, $3, $4, $5)", token.AccessToken, token.RefreshToken, token.Expiry, token.CreatedAt, token.UpdatedAt)
 	if err != nil {
 		return fmt.Errorf("failed to insert oauth2_config: %v", err)
@@ -51,7 +54,7 @@ func (c client) SaveOAuth2Token(token domain.OAuth2Token) error {
 
 func (c client) GetOAuth2Token() (domain.OAuth2Token, error) {
 	var token domain.OAuth2Token
-	err := c.db.QueryRow("SELECT access_token, refresh_token, expiry, created_at, updated_at FROM oauth2_config").Scan(&token.AccessToken, &token.RefreshToken, &token.Expiry, &token.CreatedAt, &token.UpdatedAt)
+	err := c.db.QueryRow("SELECT access_token, refresh_token, expiry, created_at, updated_at FROM oauth2_config ORDER BY created_at DESC LIMIT 1;").Scan(&token.AccessToken, &token.RefreshToken, &token.Expiry, &token.CreatedAt, &token.UpdatedAt)
 	if err != nil {
 		return domain.OAuth2Token{}, fmt.Errorf("failed to get oauth2_config: %v", err)
 	}
