@@ -1,4 +1,4 @@
-name: Build Docker Image (amd64 & arm64)
+name: Build Docker Image 
 on:
   release:
     types: [published]
@@ -6,7 +6,7 @@ on:
   
 jobs:
   ImageBuild:
-    name: Build Fitbit-Manager Custom Docker Image (amd64 & arm64)
+    name: Build Fitbit-Manager Custom Docker Image 
     runs-on: ubuntu-latest
     steps:
       - name: Slack notification of build start
@@ -85,9 +85,8 @@ jobs:
           SLACK_ICON: "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
           SLACK_TITLE: Fitbit-Manager id:mage build succeeded
           SLACK_MESSAGE: |
+            Image: Fitbit Manager
             Run number : #${{ github.run_number }}
-            Image tag : ${{ github.sha }}-${{ github.run_number }}
-            Image URL : 
            
   FailureAlert:
     if: ${{ failure() }}
@@ -103,4 +102,6 @@ jobs:
           SLACK_ICON: "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
           SLACK_TITLE: Fitbit-Manager image build failed
           SLACK_COLOR: danger
-          SLACK_MESSAGE: 'Run number : #${{ github.run_number }}'
+          SLACK_MESSAGE: |
+            Image: Fitbit Manager
+            Run number : #${{ github.run_number }}
