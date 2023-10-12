@@ -83,7 +83,7 @@ jobs:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
           SLACK_USERNAME: GitHub Actions
           SLACK_ICON: "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
-          SLACK_TITLE: Fitbit-Manager id:mage build succeeded
+          SLACK_TITLE: Fitbit-Manager image build succeeded
           SLACK_MESSAGE: |
             Image: Fitbit Manager
             Run number : #${{ github.run_number }}
