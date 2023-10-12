@@ -1,0 +1,36 @@
+name: Go Tests
+on:
+ push:
+ pull_request:
+ workflow_dispatch:
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Install Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '~1.21.0'
+          cache: true
+          cache-dependency-path: go.sum
+
+      - name: Build
+        run: go build -v ./...
+
+      - name: Test
+        run: |
+          ( go test  -cover ./... -coverprofile="cover.out" )
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: cover.out
+          fail_ci_if_error: true
+          verbose: true
