@@ -296,7 +296,7 @@ func TestUsecase_RecordHeart(t *testing.T) {
 		if hd.Value != 100 {
 			t.Errorf("Usecase.RecordHeart() hd.Value = %v, want %v", hd.Value, 100)
 		}
-		if *hd.Datatime != time.Date(timeJST.Now().Year(), timeJST.Now().Month(), timeJST.Now().Day()-1, 18, 00, 0, 0, timeJST.JST) {
+		if *hd.Datatime != time.Date(timeJST.Now().Year(), timeJST.Now().Month(), timeJST.Now().Day()-1, 23, 59, 0, 0, timeJST.JST) {
 			t.Errorf("Usecase.RecordHeart() hd.Datatime = %v, want %v", *hd.Datatime, time.Date(timeJST.Now().Year(), timeJST.Now().Month(), timeJST.Now().Day()-1, 18, 00, 0, 0, timeJST.JST))
 		}
 	}
