@@ -13,6 +13,7 @@ import (
 	"github.com/walnuts1018/fitbit-manager/infra/influxdb"
 	"github.com/walnuts1018/fitbit-manager/infra/psql"
 	"github.com/walnuts1018/fitbit-manager/usecase"
+	"golang.org/x/sync/errgroup"
 )
 
 func main() {
@@ -38,16 +39,15 @@ func main() {
 
 	usecase := usecase.NewUsecase(oauth2Client, psqlClient, influxdbClient)
 
-	err = usecase.NewFitbitClient(ctx)
-	if err != nil {
+	if err := usecase.NewFitbitClient(ctx); err != nil {
 		slog.Warn("failed to create fitbit client", "error", err)
 	}
 
-	go func() {
+	eg, ctx := errgroup.WithContext(ctx)
+	eg.Go(func() error {
 		err := usecase.RecordHeart(ctx)
 		if err != nil {
-			slog.Error("Failed to record heart", "error", err)
-			return
+			return fmt.Errorf("failed to record heart: %w", err)
 		}
 
 		ticker := time.NewTicker(1 * time.Hour)
@@ -56,25 +56,26 @@ func main() {
 		for {
 			select {
 			case <-ctx.Done():
-				return
+				return nil
 			case <-ticker.C:
 				err := usecase.RecordHeart(ctx)
 				if err != nil {
-					slog.Error("Failed to record heart", "error", err)
-					return
+					return fmt.Errorf("failed to record heart: %w", err)
 				}
 			}
 		}
-	}()
+	})
 
-	handler, err := handler.NewHandler(usecase)
-	if err != nil {
-		slog.Error("Error loading handler: %v", "error", err)
-		os.Exit(1)
-	}
-	err = handler.Run(fmt.Sprintf(":%v", config.Config.ServerPort))
-	if err != nil {
-		slog.Error("failed to run handler", "error", err)
+	eg.Go(func() error {
+		h, err := handler.NewHandler(usecase)
+		if err != nil {
+			return fmt.Errorf("failed to create handler: %w", err)
+		}
+		return h.Run(fmt.Sprintf(":%v", config.Config.ServerPort))
+	})
+
+	if err := eg.Wait(); err != nil {
+		slog.Error(err.Error())
 		os.Exit(1)
 	}
 }

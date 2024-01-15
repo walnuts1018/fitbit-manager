@@ -9,6 +9,7 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/lib/pq v1.10.9
 	golang.org/x/oauth2 v0.12.0
+	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e
 )
 
 require (
