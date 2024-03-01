@@ -47,7 +47,7 @@ func main() {
 	eg.Go(func() error {
 		err := usecase.RecordHeart(ctx)
 		if err != nil {
-			return fmt.Errorf("failed to record heart: %w", err)
+			slog.Error("failed to record heart", "error", err)
 		}
 
 		ticker := time.NewTicker(1 * time.Hour)
@@ -60,7 +60,7 @@ func main() {
 			case <-ticker.C:
 				err := usecase.RecordHeart(ctx)
 				if err != nil {
-					return fmt.Errorf("failed to record heart: %w", err)
+					slog.Error("failed to record heart", "error", err)
 				}
 			}
 		}
