@@ -38,7 +38,7 @@ func LoadConfig() error {
 
 	err := godotenv.Load(".env")
 	if err != nil {
-		slog.Warn("Error loading .env file")
+		slog.Info("Error loading .env file")
 	}
 
 	t := reflect.TypeOf(Config)
