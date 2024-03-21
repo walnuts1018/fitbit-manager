@@ -36,7 +36,7 @@ func (c *mockOauth2Client) NewFitbitClient(ctx context.Context, tokenStore domai
 	return nil
 }
 
-func (c *mockOauth2Client) GetHeartIntraday(date string, startTime string, endTime string, detail domain.HeartDetail) ([]domain.HeartData, error) {
+func (c *mockOauth2Client) GetHeartIntraday(ctx context.Context,date string, startTime string, endTime string, detail domain.HeartDetail) ([]domain.HeartData, error) {
 	if startTime == endTime {
 		return []domain.HeartData{
 			{

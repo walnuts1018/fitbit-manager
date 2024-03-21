@@ -17,7 +17,7 @@ type FitbitClient interface {
 	Auth(state string) string
 	Callback(ctx context.Context, code string) (OAuth2Token, error)
 	NewFitbitClient(ctx context.Context, tokenStore TokenStore) error
-	GetHeartIntraday(date string, startTime string, endTime string, detail HeartDetail) ([]HeartData, error)
+	GetHeartIntraday(ctx context.Context, date string, startTime string, endTime string, detail HeartDetail) ([]HeartData, error)
 }
 
 type HeartData struct {

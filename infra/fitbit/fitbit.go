@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 
 	"github.com/walnuts1018/fitbit-manager/domain"
@@ -38,6 +39,8 @@ func (s *tokenSource) Token() (*oauth2.Token, error) {
 }
 
 func (c *client) NewFitbitClient(ctx context.Context, tokenStore domain.TokenStore) error {
+	c.tokenStoreCache = tokenStore
+
 	token, err := tokenStore.GetOAuth2Token()
 	if err != nil {
 		return fmt.Errorf("failed to get oauth2 token: %w", err)
@@ -101,9 +104,13 @@ type heartResult struct {
 	} `json:"activities-heart-intraday"`
 }
 
-func (c *client) GetHeartIntraday(date string, startTime string, endTime string, detail domain.HeartDetail) ([]domain.HeartData, error) {
+func (c *client) GetHeartIntraday(ctx context.Context, date string, startTime string, endTime string, detail domain.HeartDetail) ([]domain.HeartData, error) {
 	if c.fclient == nil {
-		return nil, fmt.Errorf("fitbit client is nil")
+		slog.Error("fitbit client is nil, create new client")
+		err := c.NewFitbitClient(ctx, c.tokenStoreCache)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create fitbit client: %w", err)
+		}
 	}
 	endpoint := fmt.Sprintf("https://api.fitbit.com/1/user/-/activities/heart/date/%v/1d/%v/time/%v/%v.json", date, detail, startTime, endTime)
 	resp, err := c.fclient.Get(endpoint)

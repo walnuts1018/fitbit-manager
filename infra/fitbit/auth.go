@@ -34,6 +34,7 @@ var (
 type client struct {
 	cfg     *oauth2.Config
 	fclient *http.Client //fitbit client
+	tokenStoreCache domain.TokenStore
 }
 
 func NewOauth2Client() domain.FitbitClient {

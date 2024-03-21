@@ -7,6 +7,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/lmittmann/tint"
 	"github.com/walnuts1018/fitbit-manager/config"
 	"github.com/walnuts1018/fitbit-manager/handler"
 	"github.com/walnuts1018/fitbit-manager/infra/fitbit"
@@ -22,6 +23,11 @@ func main() {
 		slog.Error("Error loading config: %v", "error", err)
 		os.Exit(1)
 	}
+
+	logger := slog.New(tint.NewHandler(os.Stdout, &tint.Options{
+		TimeFormat: time.RFC3339,
+	}))
+	slog.SetDefault(logger)
 
 	ctx := context.Background()
 

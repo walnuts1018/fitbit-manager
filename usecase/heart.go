@@ -15,7 +15,7 @@ func (u *Usecase) GetHeart(ctx context.Context, from, to time.Time, detail domai
 	ttmp := from
 	for to.After(ttmp) {
 		if ttmp.Format("2006-01-02") == to.Format("2006-01-02") {
-			hs, err := u.oauth2Client.GetHeartIntraday(ttmp.Format("2006-01-02"), ttmp.Format("15:04"), to.Format("15:04"), detail)
+			hs, err := u.oauth2Client.GetHeartIntraday(ctx, ttmp.Format("2006-01-02"), ttmp.Format("15:04"), to.Format("15:04"), detail)
 			if err != nil {
 				return nil, fmt.Errorf("failed to get heart data: from:%v, to:%v, error: %v", ttmp, to, err)
 			}
@@ -29,7 +29,7 @@ func (u *Usecase) GetHeart(ctx context.Context, from, to time.Time, detail domai
 			}
 			hdatas = append(hdatas, hs...)
 		} else {
-			hs, err := u.oauth2Client.GetHeartIntraday(ttmp.Format("2006-01-02"), ttmp.Format("15:04"), "23:59", detail)
+			hs, err := u.oauth2Client.GetHeartIntraday(ctx, ttmp.Format("2006-01-02"), ttmp.Format("15:04"), "23:59", detail)
 			if err != nil {
 				return nil, fmt.Errorf("failed to get heart data: from:%v, to:%v, error:%v", ttmp, time.Date(ttmp.Year(), ttmp.Month(), ttmp.Day(), 23, 59, 0, 0, timeJST.JST), err)
 			}
