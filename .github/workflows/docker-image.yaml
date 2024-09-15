@@ -1,12 +1,12 @@
-name: Build Docker Image 
+name: Build Docker Image
 on:
   release:
     types: [published]
   workflow_dispatch:
-  
+
 jobs:
-  ImageBuild:
-    name: Build Fitbit-Manager Custom Docker Image 
+  build:
+    name: Build Fitbit-Manager Custom Docker Image
     runs-on: ubuntu-latest
     steps:
       - name: Slack notification of build start
@@ -16,10 +16,10 @@ jobs:
           SLACK_USERNAME: GitHub Actions
           SLACK_COLOR: "#4381de"
           SLACK_ICON: "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
-          SLACK_TITLE: Start Fitbit-Manager image build 
+          SLACK_TITLE: Start Fitbit-Manager image build
           SLACK_MESSAGE: |
             Run number : #${{ github.run_number }}
-          
+
       - name: Check out
         uses: actions/checkout@v3
 
@@ -43,10 +43,10 @@ jobs:
           key: ${{ runner.os }}-buildx
           restore-keys: |
             ${{ runner.os }}-buildx
-      
+
       - name: Get Tag from Release
         run: echo "ImageTag=${GITHUB_REF##*/}" >> $GITHUB_ENV
-       
+
       - name: Build and push Docker images
         uses: docker/build-push-action@v4.0.0
         if: github.event_name == 'release'
@@ -71,10 +71,29 @@ jobs:
             ghcr.io/walnuts1018/fitbit-manager:test-latest
             ghcr.io/walnuts1018/fitbit-manager:test-${{ github.sha }}-${{ github.run_number }}
 
+  scan:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@0.20.0
+        with:
+          image-ref: "ghcr.io/walnuts1018/fitbit-manager:test-${{ github.sha }}-${{ github.run_number }}"
+          format: "sarif"
+          ignore-unfixed: true
+          vuln-type: "os,library"
+          severity: "CRITICAL,HIGH"
+          output: "trivy-results.sarif"
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: "trivy-results.sarif"
+
   SucceessNotification:
     if: ${{ success() }}
     name: Send Success Message
-    needs: [ImageBuild]
+    needs: [build]
     runs-on: ubuntu-latest
     steps:
       - name: Send Message to Slack
@@ -87,11 +106,11 @@ jobs:
           SLACK_MESSAGE: |
             Image: Fitbit Manager
             Run number : #${{ github.run_number }}
-           
+
   FailureAlert:
     if: ${{ failure() }}
     name: Notify failure
-    needs: [ImageBuild]
+    needs: [build]
     runs-on: ubuntu-latest
     steps:
       - name: Send Failure Alert to Slack
