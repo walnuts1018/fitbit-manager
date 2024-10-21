@@ -76,7 +76,7 @@ jobs:
     needs: build
     steps:
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@0.27.0
+        uses: aquasecurity/trivy-action@0.28.0
         with:
           image-ref: "ghcr.io/walnuts1018/fitbit-manager:test-${{ github.sha }}-${{ github.run_number }}"
           format: "sarif"
