@@ -82,38 +82,3 @@ jobs:
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: "trivy-results.sarif"
-
-  SucceessNotification:
-    if: ${{ success() }}
-    name: Send Success Message
-    needs: [build]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Send Message to Slack
-        uses: rtCamp/action-slack-notify@v2
-        env:
-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
-          SLACK_USERNAME: GitHub Actions
-          SLACK_ICON: "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
-          SLACK_TITLE: Fitbit-Manager image build succeeded
-          SLACK_MESSAGE: |
-            Image: Fitbit Manager
-            Run number : #${{ github.run_number }}
-
-  FailureAlert:
-    if: ${{ failure() }}
-    name: Notify failure
-    needs: [build]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Send Failure Alert to Slack
-        uses: rtCamp/action-slack-notify@v2
-        env:
-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
-          SLACK_USERNAME: GitHub Actions
-          SLACK_ICON: "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
-          SLACK_TITLE: Fitbit-Manager image build failed
-          SLACK_COLOR: danger
-          SLACK_MESSAGE: |
-            Image: Fitbit Manager
-            Run number : #${{ github.run_number }}
