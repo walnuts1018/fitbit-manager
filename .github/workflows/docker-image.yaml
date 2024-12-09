@@ -2,7 +2,6 @@ name: Build Docker Image
 on:
   release:
     types: [published]
-  workflow_dispatch:
 
 jobs:
   build:
@@ -11,17 +10,6 @@ jobs:
     outputs:
       ImageTag: ${{ steps.GetTag.outputs.ImageTag }}
     steps:
-      - name: Slack notification of build start
-        uses: rtCamp/action-slack-notify@v2
-        env:
-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
-          SLACK_USERNAME: GitHub Actions
-          SLACK_COLOR: "#4381de"
-          SLACK_ICON: "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
-          SLACK_TITLE: Start Fitbit-Manager image build
-          SLACK_MESSAGE: |
-            Run number : #${{ github.run_number }}
-
       - name: Check out
         uses: actions/checkout@v4
 
@@ -53,7 +41,6 @@ jobs:
 
       - name: Build and push Docker images
         uses: docker/build-push-action@v6.10.0
-        if: github.event_name == 'release'
         with:
           push: true
           context: .
