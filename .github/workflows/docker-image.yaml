@@ -49,7 +49,7 @@ jobs:
       - name: Get Tag from Release
         id: GetTag
         run: |
-          echo "ImageTag=${GITHUB_REF##*/}" >> $GITHUB_OUTPUT
+          echo "ImageTag=${{ github.ref_name }}" >> $GITHUB_OUTPUT
 
       - name: Build and push Docker images
         uses: docker/build-push-action@v6.10.0
@@ -71,7 +71,7 @@ jobs:
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@0.29.0
         with:
-          image-ref: "ghcr.io/walnuts1018/fitbit-manager:${{ job.build.outputs.ImageTag }}"
+          image-ref: "ghcr.io/walnuts1018/fitbit-manager:${{ needs.build.outputs.ImageTag }}"
           format: "sarif"
           ignore-unfixed: true
           vuln-type: "os,library"
