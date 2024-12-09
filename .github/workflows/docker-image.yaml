@@ -8,6 +8,8 @@ jobs:
   build:
     name: Build Fitbit-Manager Custom Docker Image
     runs-on: ubuntu-latest
+    outputs:
+      ImageTag: ${{ steps.GetTag.outputs.ImageTag }}
     steps:
       - name: Slack notification of build start
         uses: rtCamp/action-slack-notify@v2
@@ -45,7 +47,9 @@ jobs:
             ${{ runner.os }}-buildx
 
       - name: Get Tag from Release
-        run: echo "ImageTag=${GITHUB_REF##*/}" >> $GITHUB_ENV
+        id: GetTag
+        run: |
+          echo "ImageTag=${GITHUB_REF##*/}" >> $GITHUB_OUTPUT
 
       - name: Build and push Docker images
         uses: docker/build-push-action@v6.10.0
@@ -58,18 +62,7 @@ jobs:
           cache-to: type=local,dest=/tmp/.buildx-cache
           tags: |
             ghcr.io/walnuts1018/fitbit-manager:latest
-            ghcr.io/walnuts1018/fitbit-manager:${{ env.ImageTag }}
-
-      - name: Build and push Docker images
-        uses: docker/build-push-action@v6.10.0
-        if: github.event_name != 'release'
-        with:
-          push: true
-          context: .
-          platforms: linux/amd64,linux/arm64
-          tags: |
-            ghcr.io/walnuts1018/fitbit-manager:test-latest
-            ghcr.io/walnuts1018/fitbit-manager:test-${{ github.sha }}-${{ github.run_number }}
+            ghcr.io/walnuts1018/fitbit-manager:${{ steps.GetTag.outputs.ImageTag }}
 
   scan:
     runs-on: ubuntu-latest
@@ -78,7 +71,7 @@ jobs:
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@0.29.0
         with:
-          image-ref: "ghcr.io/walnuts1018/fitbit-manager:test-${{ github.sha }}-${{ github.run_number }}"
+          image-ref: "ghcr.io/walnuts1018/fitbit-manager:${{ job.build.outputs.ImageTag }}"
           format: "sarif"
           ignore-unfixed: true
           vuln-type: "os,library"
