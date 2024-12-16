@@ -10,21 +10,21 @@ import (
 
 func TestNewFitbitTimeRange(t *testing.T) {
 	type args struct {
-		start synchro.Time[tz.UTC]
-		end   synchro.Time[tz.UTC]
+		start synchro.Time[tz.AsiaTokyo]
+		end   synchro.Time[tz.AsiaTokyo]
 	}
 	tests := []struct {
 		name string
 		args args
-		want []FitbitTimeRange
+		want []FitbitTimeRange[tz.AsiaTokyo]
 	}{
 		{
 			name: "same day",
 			args: args{
-				start: synchro.New[tz.UTC](2024, 1, 1, 0, 0, 0, 0),
-				end:   synchro.New[tz.UTC](2024, 1, 1, 22, 0, 0, 0),
+				start: synchro.New[tz.AsiaTokyo](2024, 1, 1, 0, 0, 0, 0),
+				end:   synchro.New[tz.AsiaTokyo](2024, 1, 1, 22, 0, 0, 0),
 			},
-			want: []FitbitTimeRange{
+			want: []FitbitTimeRange[tz.AsiaTokyo]{
 				{
 					date: fitbitDate{
 						year:  2024,
@@ -45,10 +45,10 @@ func TestNewFitbitTimeRange(t *testing.T) {
 		{
 			name: "different day",
 			args: args{
-				start: synchro.New[tz.UTC](2024, 1, 1, 0, 0, 0, 0),
-				end:   synchro.New[tz.UTC](2024, 1, 2, 15, 0, 0, 0),
+				start: synchro.New[tz.AsiaTokyo](2024, 1, 1, 0, 0, 0, 0),
+				end:   synchro.New[tz.AsiaTokyo](2024, 1, 2, 15, 0, 0, 0),
 			},
-			want: []FitbitTimeRange{
+			want: []FitbitTimeRange[tz.AsiaTokyo]{
 				{
 					date: fitbitDate{
 						year:  2024,
@@ -84,10 +84,10 @@ func TestNewFitbitTimeRange(t *testing.T) {
 		{
 			name: "different month",
 			args: args{
-				start: synchro.New[tz.UTC](2024, 1, 31, 0, 0, 0, 0),
-				end:   synchro.New[tz.UTC](2024, 2, 2, 15, 0, 0, 0),
+				start: synchro.New[tz.AsiaTokyo](2024, 1, 31, 0, 0, 0, 0),
+				end:   synchro.New[tz.AsiaTokyo](2024, 2, 2, 15, 0, 0, 0),
 			},
-			want: []FitbitTimeRange{
+			want: []FitbitTimeRange[tz.AsiaTokyo]{
 				{
 					date: fitbitDate{
 						year:  2024,
@@ -138,10 +138,10 @@ func TestNewFitbitTimeRange(t *testing.T) {
 		{
 			name: "startTimeとendTimeが違う日で、endTimeが00:00のとき",
 			args: args{
-				start: synchro.New[tz.UTC](2024, 1, 1, 0, 0, 0, 0), // 2024-01-01 00:00:00
-				end:   synchro.New[tz.UTC](2024, 1, 2, 0, 0, 1, 0), // 2024-01-02 00:00:01
+				start: synchro.New[tz.AsiaTokyo](2024, 1, 1, 0, 0, 0, 0), // 2024-01-01 00:00:00
+				end:   synchro.New[tz.AsiaTokyo](2024, 1, 2, 0, 0, 1, 0), // 2024-01-02 00:00:01
 			},
-			want: []FitbitTimeRange{
+			want: []FitbitTimeRange[tz.AsiaTokyo]{
 				{
 					date: fitbitDate{
 						year:  2024,
@@ -162,10 +162,10 @@ func TestNewFitbitTimeRange(t *testing.T) {
 		{
 			name: "startTimeとendTimeが違う日で、startTimeが23:59のとき",
 			args: args{
-				start: synchro.New[tz.UTC](2024, 1, 1, 23, 59, 0, 0), // 2024-01-01 23:59:00
-				end:   synchro.New[tz.UTC](2024, 1, 2, 1, 0, 0, 0),   // 2024-01-02 01:00:00
+				start: synchro.New[tz.AsiaTokyo](2024, 1, 1, 23, 59, 0, 0), // 2024-01-01 23:59:00
+				end:   synchro.New[tz.AsiaTokyo](2024, 1, 2, 1, 0, 0, 0),   // 2024-01-02 01:00:00
 			},
-			want: []FitbitTimeRange{
+			want: []FitbitTimeRange[tz.AsiaTokyo]{
 				{
 					date: fitbitDate{
 						year:  2024,
@@ -186,10 +186,10 @@ func TestNewFitbitTimeRange(t *testing.T) {
 		{
 			name: "startTimeとendTimeが違う日で、startTimeが23:59でendTimeが00:00のとき",
 			args: args{
-				start: synchro.New[tz.UTC](2024, 1, 1, 23, 59, 0, 0), // 2024-01-01 23:59:00
-				end:   synchro.New[tz.UTC](2024, 1, 2, 0, 0, 0, 0),   // 2024-01-02 00:00:00
+				start: synchro.New[tz.AsiaTokyo](2024, 1, 1, 23, 59, 0, 0), // 2024-01-01 23:59:00
+				end:   synchro.New[tz.AsiaTokyo](2024, 1, 2, 0, 0, 0, 0),   // 2024-01-02 00:00:00
 			},
-			want: []FitbitTimeRange{},
+			want: []FitbitTimeRange[tz.AsiaTokyo]{},
 		},
 	}
 	for _, tt := range tests {

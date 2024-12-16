@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/Code-Hex/synchro"
-	"github.com/Code-Hex/synchro/tz"
 )
 
 type fitbitDate struct {
@@ -19,22 +18,19 @@ type fitbitTime struct {
 	minute int
 }
 
-type FitbitTimeRange struct {
+type FitbitTimeRange[T synchro.TimeZone] struct {
 	date      fitbitDate
 	startTime fitbitTime
 	endTime   fitbitTime
 }
 
-func NewFitbitTimeRange[T synchro.TimeZone](start, end synchro.Time[T]) []FitbitTimeRange {
-	startUTC := synchro.ConvertTz[tz.UTC](start)
-	endUTC := synchro.ConvertTz[tz.UTC](end)
+func NewFitbitTimeRange[T synchro.TimeZone](start, end synchro.Time[T]) []FitbitTimeRange[T] {
+	now := start
+	timeRanges := make([]FitbitTimeRange[T], 0)
 
-	now := startUTC
-	timeRanges := make([]FitbitTimeRange, 0)
-
-	for datetimeBefore(now, endUTC) {
-		if dateEqual(now, endUTC) {
-			timeRanges = append(timeRanges, FitbitTimeRange{
+	for datetimeBefore(now, end) {
+		if dateEqual(now, end) {
+			timeRanges = append(timeRanges, FitbitTimeRange[T]{
 				date: fitbitDate{
 					year:  now.Year(),
 					month: now.Month(),
@@ -45,14 +41,14 @@ func NewFitbitTimeRange[T synchro.TimeZone](start, end synchro.Time[T]) []Fitbit
 					minute: now.Minute(),
 				},
 				endTime: fitbitTime{
-					hour:   endUTC.Hour(),
-					minute: endUTC.Minute(),
+					hour:   end.Hour(),
+					minute: end.Minute(),
 				},
 			})
 			break
 		} else {
 			if !(now.Hour() == 23 && now.Minute() == 59) {
-				timeRanges = append(timeRanges, FitbitTimeRange{
+				timeRanges = append(timeRanges, FitbitTimeRange[T]{
 					date: fitbitDate{
 						year:  now.Year(),
 						month: now.Month(),
@@ -69,21 +65,21 @@ func NewFitbitTimeRange[T synchro.TimeZone](start, end synchro.Time[T]) []Fitbit
 				})
 			}
 		}
-		now = synchro.New[tz.UTC](now.Year(), now.Month(), now.Day()+1, 0, 0, 0, 0)
+		now = synchro.New[T](now.Year(), now.Month(), now.Day()+1, 0, 0, 0, 0)
 	}
 
 	return timeRanges
 }
 
-func (r FitbitTimeRange) Date() string {
+func (r FitbitTimeRange[T]) Date() string {
 	return fmt.Sprintf("%04d-%02d-%02d", r.date.year, r.date.month, r.date.day)
 }
 
-func (r FitbitTimeRange) StartTime() string {
+func (r FitbitTimeRange[T]) StartTime() string {
 	return fmt.Sprintf("%02d:%02d", r.startTime.hour, r.startTime.minute)
 }
 
-func (r FitbitTimeRange) EndTime() string {
+func (r FitbitTimeRange[T]) EndTime() string {
 	return fmt.Sprintf("%02d:%02d", r.endTime.hour, r.endTime.minute)
 }
 
@@ -93,7 +89,7 @@ func dateEqual[T synchro.TimeZone](a, b synchro.Time[T]) bool {
 
 // 秒以下を無視
 func datetimeBefore[T synchro.TimeZone](a, b synchro.Time[T]) bool {
-	newA := synchro.New[tz.UTC](a.Year(), a.Month(), a.Day(), a.Hour(), a.Minute(), 0, 0)
-	newB := synchro.New[tz.UTC](b.Year(), b.Month(), b.Day(), b.Hour(), b.Minute(), 0, 0)
+	newA := synchro.New[T](a.Year(), a.Month(), a.Day(), a.Hour(), a.Minute(), 0, 0)
+	newB := synchro.New[T](b.Year(), b.Month(), b.Day(), b.Hour(), b.Minute(), 0, 0)
 	return newA.Before(newB)
 }

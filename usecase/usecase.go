@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/url"
 
+	"github.com/Code-Hex/synchro/tz"
 	"github.com/walnuts1018/fitbit-manager/domain"
 )
 
@@ -11,7 +12,7 @@ type FitbitClient interface {
 	GenerateAuthURL(state string) (url.URL, string, error)
 	Callback(ctx context.Context, code string, verifier string) (string, domain.OAuth2Token, error)
 	GetName(ctx context.Context, token domain.OAuth2Token) (string, domain.OAuth2Token, error)
-	GetHeartData(ctx context.Context, token domain.OAuth2Token, timeRange domain.FitbitTimeRange, detail domain.HeartDetail) ([]domain.HeartData, domain.OAuth2Token, error)
+	GetHeartData(ctx context.Context, token domain.OAuth2Token, timeRange domain.FitbitTimeRange[tz.AsiaTokyo], detail domain.HeartDetail) ([]domain.HeartData, domain.OAuth2Token, error)
 }
 
 type TokenStore interface {

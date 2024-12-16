@@ -77,7 +77,7 @@ type heartResult struct {
 	} `json:"activities-heart-intraday"`
 }
 
-func (c *FitbitController) GetHeartData(ctx context.Context, token domain.OAuth2Token, timeRange domain.FitbitTimeRange, detail domain.HeartDetail) ([]domain.HeartData, domain.OAuth2Token, error) {
+func (c *FitbitController) GetHeartData(ctx context.Context, token domain.OAuth2Token, timeRange domain.FitbitTimeRange[tz.AsiaTokyo], detail domain.HeartDetail) ([]domain.HeartData, domain.OAuth2Token, error) {
 	tokenSource := c.oauth2.TokenSource(ctx, &oauth2.Token{
 		AccessToken:  token.AccessToken,
 		RefreshToken: token.RefreshToken,
@@ -85,6 +85,8 @@ func (c *FitbitController) GetHeartData(ctx context.Context, token domain.OAuth2
 		Expiry:       token.Expiry.StdTime(),
 	})
 	httpClient := oauth2.NewClient(ctx, tokenSource)
+
+	// デバイスのタイムゾーンで指定する雰囲気があるので、Asia/TokyoでのHH:mmを指定するべき
 	endpoint := fmt.Sprintf("https://api.fitbit.com/1/user/-/activities/heart/date/%v/1d/%v/time/%v/%v.json", timeRange.Date(), detail, timeRange.StartTime(), timeRange.EndTime())
 	resp, err := httpClient.Get(endpoint)
 	if err != nil {
@@ -109,7 +111,8 @@ func (c *FitbitController) GetHeartData(ctx context.Context, token domain.OAuth2
 
 	dataset := make([]domain.HeartData, 0, len(heart.ActivitiesHeartIntraday.DataSet))
 	for _, d := range heart.ActivitiesHeartIntraday.DataSet {
-		parsed, err := synchro.ParseISO[tz.AsiaTokyo](timeRange.Date() + "T" + d.Time + "Z")
+		//帰ってくるデータの時間もデバイスのタイムゾーンっぽい
+		parsed, err := synchro.ParseISO[tz.AsiaTokyo](timeRange.Date() + "T" + d.Time + "+09:00")
 		if err != nil {
 			return nil, domain.OAuth2Token{}, fmt.Errorf("failed to parse time: %w", err)
 		}
