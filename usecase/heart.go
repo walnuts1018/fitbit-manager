@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"time"
 
 	"github.com/Code-Hex/synchro"
 	"github.com/Code-Hex/synchro/tz"
@@ -19,15 +18,11 @@ func (u *Usecase) GetHeartNow(ctx context.Context, userID string) (domain.HeartD
 	return data, nil
 }
 
-func (u *Usecase) RecordHeart(ctx context.Context, userID string) error {
+func (u *Usecase) RecordHeart(ctx context.Context, defaultFrom synchro.Time[tz.AsiaTokyo], userID string) error {
 	var from synchro.Time[tz.AsiaTokyo]
-
-	now := synchro.Now[tz.AsiaTokyo]()
-
-	latest, err := u.dataStore.GetLatestHeartData(ctx, userID)
-	if err != nil {
+	if latest, err := u.dataStore.GetLatestHeartData(ctx, userID); err != nil {
 		if errors.Is(err, ErrNotFound) {
-			from = now.Add(-24 * time.Hour)
+			from = defaultFrom
 		} else {
 			return fmt.Errorf("failed to get last heart data: %w", err)
 		}
@@ -40,7 +35,7 @@ func (u *Usecase) RecordHeart(ctx context.Context, userID string) error {
 		return fmt.Errorf("failed to get oauth2 token: %w", err)
 	}
 
-	timeRanges := domain.NewFitbitTimeRange(from, now)
+	timeRanges := domain.NewFitbitTimeRange(from, synchro.Now[tz.AsiaTokyo]())
 	for _, r := range timeRanges {
 		data, newToken, err := u.fitbitClient.GetHeartData(ctx, token, r, domain.HeartDetailOneMinute)
 		if err != nil {

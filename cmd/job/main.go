@@ -7,7 +7,10 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
+	"github.com/Code-Hex/synchro"
+	"github.com/Code-Hex/synchro/tz"
 	"github.com/walnuts1018/fitbit-manager/config"
 	"github.com/walnuts1018/fitbit-manager/logger"
 	"github.com/walnuts1018/fitbit-manager/tracer"
@@ -41,7 +44,12 @@ func main() {
 	}
 	defer cleanup()
 
-	if err := usecase.RecordHeart(ctx, string(cfg.UserID)); err != nil {
+	from := synchro.Now[tz.AsiaTokyo]().Add(-24 * time.Hour)
+	if cfg.RecordStartDatetime != nil {
+		from = synchro.Time[tz.AsiaTokyo](*cfg.RecordStartDatetime)
+	}
+
+	if err := usecase.RecordHeart(ctx, from, string(cfg.UserID)); err != nil {
 		slog.Error("Failed to record heart", slog.Any("error", err))
 		os.Exit(1)
 	}
