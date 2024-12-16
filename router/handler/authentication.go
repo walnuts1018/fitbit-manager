@@ -42,6 +42,7 @@ func (h *Handler) Callback(c *gin.Context) {
 	}
 
 	if state != savedState {
+		slog.Error("invalid state", "got_state", state, "saved_state", savedState)
 		c.HTML(http.StatusBadRequest, "result.html", gin.H{
 			"result": "error",
 			"error":  "invalid state",
