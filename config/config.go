@@ -5,33 +5,36 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/Code-Hex/synchro"
+	"github.com/Code-Hex/synchro/tz"
 	"github.com/caarlos0/env/v11"
 	_ "github.com/joho/godotenv/autoload"
 )
 
 type Config struct {
-	ServerPort string     `env:"SERVER_PORT" envDefault:"8080"`
-	LogLevel   slog.Level `env:"LOG_LEVEL"`
-	LogType    LogType    `env:"LOG_TYPE" envDefault:"json"`
-	ServerURL  ServerURL  `env:"SERVER_URL" envDefault:"https://fitbit-manager.local.walnuts.dev/"`
-
-	UserID         UserID         `env:"USER_ID,required"`
-	ClientID       ClientID       `env:"CLIENT_ID,required"`
-	ClientSecret   ClientSecret   `env:"CLIENT_SECRET,required"`
-	CookieSecret   CookieSecret   `env:"COOKIE_SECRET,required"`
-	PSQLDSN        PSQLDSN        `envPrefix:"PSQL_"`
-	InfluxDBConfig InfluxDBConfig `envPrefix:"INFLUXDB_"`
+	ServerPort          string               `env:"SERVER_PORT" envDefault:"8080"`
+	LogLevel            slog.Level           `env:"LOG_LEVEL"`
+	LogType             LogType              `env:"LOG_TYPE" envDefault:"json"`
+	ServerURL           ServerURL            `env:"SERVER_URL" envDefault:"https://fitbit.walnuts.dev/"`
+	UserID              UserID               `env:"USER_ID,required"`
+	ClientID            ClientID             `env:"CLIENT_ID,required"`
+	ClientSecret        ClientSecret         `env:"CLIENT_SECRET,required"`
+	CookieSecret        CookieSecret         `env:"COOKIE_SECRET,required"`
+	PSQLDSN             PSQLDSN              `envPrefix:"PSQL_"`
+	InfluxDBConfig      InfluxDBConfig       `envPrefix:"INFLUXDB_"`
+	RecordStartDatetime *RecordStartDatetime `env:"RECORD_START_DATETIME"`
 }
 
 func Load() (Config, error) {
 	var cfg Config
 	if err := env.ParseWithOptions(&cfg, env.Options{
 		FuncMap: map[reflect.Type]env.ParserFunc{
-			reflect.TypeOf(slog.Level(0)):    returnAny(ParseLogLevel),
-			reflect.TypeOf(time.Duration(0)): returnAny(time.ParseDuration),
-			reflect.TypeOf(LogType("")):      returnAny(ParseLogType),
-			reflect.TypeOf(CookieSecret("")): returnAny(ParseCookieSecret),
-			reflect.TypeOf(ServerURL("")):    returnAny(ParseServerURL),
+			reflect.TypeOf(slog.Level(0)):                                     returnAny(ParseLogLevel),
+			reflect.TypeOf(time.Duration(0)):                                  returnAny(time.ParseDuration),
+			reflect.TypeOf(LogType("")):                                       returnAny(ParseLogType),
+			reflect.TypeOf(CookieSecret("")):                                  returnAny(ParseCookieSecret),
+			reflect.TypeOf(ServerURL("")):                                     returnAny(ParseServerURL),
+			reflect.TypeOf(RecordStartDatetime(synchro.Time[tz.AsiaTokyo]{})): returnAny(ParseRecordStartDatetime),
 		},
 	}); err != nil {
 		return Config{}, err

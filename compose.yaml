@@ -11,6 +11,7 @@ services:
     environment:
       LOG_LEVEL: "debug"
       LOG_TYPE: "text"
+      SERVER_URL: "https://fitbit-manager.local.walnuts.dev/"
       USER_ID: B84M2S
       CLIENT_ID: "23R8DS"
       COOKIE_SECRET: "mock-cookie-secret------"
