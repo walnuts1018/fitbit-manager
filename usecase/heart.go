@@ -6,11 +6,13 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/Code-Hex/synchro"
+	"github.com/Code-Hex/synchro/tz"
 	"github.com/walnuts1018/fitbit-manager/domain"
 	"github.com/walnuts1018/fitbit-manager/infra/timeJST"
 )
 
-func (u *Usecase) GetHeart(ctx context.Context, from, to time.Time, detail domain.HeartDetail) ([]domain.HeartData, error) {
+func (u *Usecase) GetHeart(ctx context.Context, from, to synchro.Time[tz.AsiaTokyo], detail domain.HeartDetail) ([]domain.HeartData, error) {
 	hdatas := make([]domain.HeartData, 0)
 	ttmp := from
 	for to.After(ttmp) {
@@ -48,7 +50,7 @@ func (u *Usecase) GetHeart(ctx context.Context, from, to time.Time, detail domai
 	return hdatas, nil
 }
 
-func (u *Usecase) GetHeartNow(ctx context.Context) (int, time.Time, error) {
+func (u *Usecase) GetHeartNow(ctx context.Context) (int, synchro.Time[tz.AsiaTokyo], error) {
 	now := timeJST.Now()
 	if u.heartCache.UpdatedAt.Add(1 * time.Minute).After(now) {
 		slog.Info("use cache")
@@ -58,16 +60,16 @@ func (u *Usecase) GetHeartNow(ctx context.Context) (int, time.Time, error) {
 	hourBefore := now.Add(-6 * time.Hour)
 	datas, err := u.GetHeart(ctx, hourBefore, now, domain.HeartDetailOneSecond)
 	if err != nil {
-		return 0, time.Time{}, fmt.Errorf("failed to get heart rate: %w", err)
+		return 0, synchro.Time[tz.AsiaTokyo]{}, fmt.Errorf("failed to get heart rate: %w", err)
 	}
 
 	if len(datas) == 0 {
-		return 0, time.Time{}, fmt.Errorf("heart data is empty")
+		return 0, synchro.Time[tz.AsiaTokyo]{}, fmt.Errorf("heart data is empty")
 	}
 
 	data := datas[len(datas)-1]
 	if data.Datatime == nil {
-		return 0, time.Time{}, fmt.Errorf("datatime is nil")
+		return 0, synchro.Time[tz.AsiaTokyo]{}, fmt.Errorf("datatime is nil")
 	}
 	u.heartCache.heart = data.Value
 	u.heartCache.dataAt = *data.Datatime

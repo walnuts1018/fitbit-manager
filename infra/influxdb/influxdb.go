@@ -14,16 +14,19 @@ import (
 
 type client struct {
 	influxdbClient influxdb2.Client
-	queryAPI       api.QueryAPI
-	writeAPI       api.WriteAPIBlocking
+	bucket         string
+
+	queryAPI api.QueryAPI
+	writeAPI api.WriteAPIBlocking
 }
 
-func NewClient() domain.DataStore {
-	c := influxdb2.NewClient(config.Config.InfluxDBEndpoint, config.Config.InfluxDBAuthToken)
-	w := c.WriteAPIBlocking(config.Config.InfluxDBOrg, config.Config.InfluxDBBucket)
-	q := c.QueryAPI(config.Config.InfluxDBOrg)
+func NewClient(cfg config.InfluxDBConfig) client {
+	c := influxdb2.NewClient(cfg.Endpoint, cfg.AuthToken)
+	w := c.WriteAPIBlocking(cfg.Org, cfg.Bucket)
+	q := c.QueryAPI(cfg.Org)
 	return client{
 		influxdbClient: c,
+		bucket:         cfg.Bucket,
 		queryAPI:       q,
 		writeAPI:       w,
 	}
@@ -49,7 +52,7 @@ func (c client) RecordHeart(ctx context.Context, hearts []domain.HeartData) erro
 
 func (c client) GetLastHeartData(ctx context.Context) (domain.HeartData, error) {
 	h := domain.HeartData{}
-	query := fmt.Sprintf(`from(bucket:"%v") |> range(start: -24h) |> filter(fn: (r) => r._measurement == "heart") |> last()`, config.Config.InfluxDBBucket)
+	query := fmt.Sprintf(`from(bucket:"%v") |> range(start: -24h) |> filter(fn: (r) => r._measurement == "heart") |> last()`, c.bucket)
 	result, err := c.queryAPI.Query(ctx, query)
 	if err != nil {
 		return h, fmt.Errorf("failed to query: %w", err)

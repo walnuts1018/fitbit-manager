@@ -5,83 +5,45 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
-	"time"
+	"os/signal"
+	"syscall"
 
-	"github.com/lmittmann/tint"
 	"github.com/walnuts1018/fitbit-manager/config"
-	"github.com/walnuts1018/fitbit-manager/handler"
-	"github.com/walnuts1018/fitbit-manager/infra/fitbit"
-	"github.com/walnuts1018/fitbit-manager/infra/influxdb"
-	"github.com/walnuts1018/fitbit-manager/infra/psql"
-	"github.com/walnuts1018/fitbit-manager/usecase"
-	"golang.org/x/sync/errgroup"
+	"github.com/walnuts1018/fitbit-manager/logger"
+	"github.com/walnuts1018/fitbit-manager/tracer"
+	"github.com/walnuts1018/fitbit-manager/wire"
 )
 
 func main() {
-	err := config.LoadConfig()
+	cfg, err := config.Load()
 	if err != nil {
-		slog.Error("Error loading config: %v", "error", err)
+		slog.Error("Failed to load config",
+			slog.Any("error", err),
+		)
 		os.Exit(1)
 	}
 
-	logger := slog.New(tint.NewHandler(os.Stdout, &tint.Options{
-		TimeFormat: time.RFC3339,
-	}))
-	slog.SetDefault(logger)
+	logger.CreateAndSetLogger(cfg.LogLevel, cfg.LogType)
 
-	ctx := context.Background()
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGTERM, os.Interrupt, os.Kill)
+	defer stop()
 
-	psqlClient, err := psql.NewPSQLClient()
+	close, err := tracer.NewTracerProvider(ctx)
 	if err != nil {
-		slog.Error("failed to connect to psql", "error", err)
+		slog.Error(fmt.Sprintf("failed to create tracer provider: %v", err))
+	}
+	defer close()
+
+	router, err := wire.CreateRouter(ctx, cfg)
+	if err != nil {
+		slog.Error("Failed to create router", slog.Any("error", err))
 		os.Exit(1)
 	}
-	defer psqlClient.Close()
 
-	oauth2Client := fitbit.NewOauth2Client()
+	slog.Info("Server is running", slog.String("port", cfg.ServerPort))
 
-	influxdbClient := influxdb.NewClient()
-	defer influxdbClient.Close()
-
-	usecase := usecase.NewUsecase(oauth2Client, psqlClient, influxdbClient)
-
-	if err := usecase.NewFitbitClient(ctx); err != nil {
-		slog.Warn("failed to create fitbit client", "error", err)
-	}
-
-	eg, ctx := errgroup.WithContext(ctx)
-	eg.Go(func() error {
-		err := usecase.RecordHeart(ctx)
-		if err != nil {
-			slog.Error("failed to record heart", "error", err)
-		}
-
-		ticker := time.NewTicker(1 * time.Hour)
-		defer ticker.Stop()
-
-		for {
-			select {
-			case <-ctx.Done():
-				return nil
-			case <-ticker.C:
-				err := usecase.RecordHeart(ctx)
-				if err != nil {
-					slog.Error("failed to record heart", "error", err)
-				}
-			}
-		}
-	})
-
-	eg.Go(func() error {
-		h, err := handler.NewHandler(usecase)
-		if err != nil {
-			return fmt.Errorf("failed to create handler: %w", err)
-		}
-		return h.Run(fmt.Sprintf(":%v", config.Config.ServerPort))
-	})
-
-	if err := eg.Wait(); err != nil {
-		slog.Error(err.Error())
+	if err := router.Run(fmt.Sprintf(":%s", cfg.ServerPort)); err != nil {
+		slog.Error("Failed to run server", slog.Any("error", err))
 		os.Exit(1)
 	}
 }

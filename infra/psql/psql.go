@@ -17,8 +17,8 @@ type client struct {
 	db *sql.DB
 }
 
-func NewPSQLClient() (domain.TokenStore, error) {
-	db, err := sql.Open("postgres", fmt.Sprintf("host=%v port=%v user=%v password=%v dbname=%v sslmode=%v", config.Config.PSQLEndpoint, config.Config.PSQLPort, config.Config.PSQLUser, config.Config.PSQLPassword, config.Config.PSQLDatabase, sslMode))
+func NewPSQLClient(cfg config.Config) (client, error) {
+	db, err := sql.Open("postgres", cfg.PSQLDSN.String())
 	if err != nil {
 		return client{}, fmt.Errorf("failed to open db: %v", err)
 	}
