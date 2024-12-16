@@ -16,7 +16,7 @@ RUN --mount=type=cache,target=/go/pkg/mod/ \
 
 RUN --mount=type=cache,target=/go/pkg/mod/ \
     --mount=type=cache,target=/root/.cache/go-build \
-    CGO_ENABLED=0 GOOS=linux go build -o fitbit-manager /$ROOT/cmd/job && chmod +x ./fitbit-manager-job
+    CGO_ENABLED=0 GOOS=linux go build -o fitbit-manager-job /$ROOT/cmd/job && chmod +x ./fitbit-manager-job
 
 FROM debian:bookworm-slim
 WORKDIR /app
