@@ -4,7 +4,7 @@ go 1.23.3
 
 require (
 	dario.cat/mergo v1.0.1
-	github.com/caarlos0/env/v11 v11.2.2
+	github.com/caarlos0/env/v11 v11.3.0
 	github.com/gin-contrib/sessions v1.0.1
 	github.com/gin-gonic/gin v1.10.0
 	github.com/influxdata/influxdb-client-go/v2 v2.14.0
