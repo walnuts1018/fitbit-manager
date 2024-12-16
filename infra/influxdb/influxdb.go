@@ -23,7 +23,7 @@ type InfluxDBController struct {
 }
 
 func NewInfluxDBController(cfg config.InfluxDBConfig) (*InfluxDBController, func()) {
-	c := influxdb2.NewClient(cfg.Endpoint, cfg.AuthToken)
+	c := influxdb2.NewClient(cfg.Endpoint.String(), cfg.AuthToken)
 	w := c.WriteAPIBlocking(cfg.Org, cfg.Bucket)
 	q := c.QueryAPI(cfg.Org)
 	return &InfluxDBController{
@@ -38,13 +38,13 @@ func NewInfluxDBController(cfg config.InfluxDBConfig) (*InfluxDBController, func
 
 const (
 	measurementKey = "heart"
-	rateKey        = "rate"
-	userKey        = "user"
+	rateField      = "rate"
+	userTag        = "user"
 )
 
 func (c *InfluxDBController) RecordHeart(ctx context.Context, userID string, hearts []domain.HeartData) error {
 	for _, heart := range hearts {
-		p := influxdb2.NewPointWithMeasurement(measurementKey).AddField(rateKey, heart.Value).AddTag(userKey, userID).SetTime(heart.Time.StdTime())
+		p := influxdb2.NewPointWithMeasurement(measurementKey).AddField(rateField, heart.Value).AddTag(userTag, userID).SetTime(heart.Time.StdTime())
 		c.writeAPI.WritePoint(context.Background(), p)
 	}
 
@@ -58,7 +58,8 @@ func (c *InfluxDBController) RecordHeart(ctx context.Context, userID string, hea
 
 func (c *InfluxDBController) GetLatestHeartData(ctx context.Context, userID string) (domain.HeartData, error) {
 	h := domain.HeartData{}
-	query := fmt.Sprintf(`from(bucket:"%v") |> range(start: 0) |> filter(fn: (r) => r._measurement == %v) |> filter(fn: (r) => r.%v == %v) |> last()`, c.bucket, measurementKey, userKey, userID)
+	query := fmt.Sprintf(`from(bucket:"%v") |> range(start: 0) |> filter(fn: (r) => r._measurement == "%v") |> filter(fn: (r) => r._field == "%v") |> filter(fn: (r) => r.%v == "%v") |> last()`, c.bucket, measurementKey, rateField, userTag, userID)
+	slog.Debug("query", "query", query)
 	result, err := c.queryAPI.Query(ctx, query)
 	if err != nil {
 		return h, fmt.Errorf("failed to query: %w", err)

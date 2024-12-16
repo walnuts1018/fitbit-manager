@@ -9,7 +9,7 @@ import (
 )
 
 func (p *PostgresClient) SaveOAuth2Token(ctx context.Context, userID string, token domain.OAuth2Token) error {
-	result := p.DB(ctx).Save(fromEntity(token))
+	result := p.DB(ctx).Save(fromEntity(userID, token))
 	if result.Error != nil {
 		return fmt.Errorf("failed to update: %w", result.Error)
 	}
@@ -18,9 +18,9 @@ func (p *PostgresClient) SaveOAuth2Token(ctx context.Context, userID string, tok
 
 func (p *PostgresClient) GetOAuth2Token(ctx context.Context, userID string) (domain.OAuth2Token, error) {
 	var token OAuth2Token
-	result := p.DB(ctx).Find(&token, userID)
+	result := p.DB(ctx).First(&token, userID)
 	if result.Error != nil {
-		return domain.OAuth2Token{}, fmt.Errorf("failed to get artist by ids: %w", result.Error)
+		return domain.OAuth2Token{}, fmt.Errorf("failed to get token: %w", result.Error)
 	}
 	return token.toEntity(), nil
 }

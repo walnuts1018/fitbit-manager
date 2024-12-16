@@ -25,7 +25,6 @@ var (
 )
 
 type OAuth2Token struct {
-	UserID       string
 	AccessToken  string
 	RefreshToken string
 	Expiry       synchro.Time[tz.AsiaTokyo]

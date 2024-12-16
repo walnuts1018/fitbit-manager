@@ -29,7 +29,6 @@ func (h *Handler) SignIn(c *gin.Context) {
 func (h *Handler) Callback(c *gin.Context) {
 	code := c.Query("code")
 	state := c.Query("state")
-	user_id := c.Query("user_id")
 
 	session := sessions.Default(c)
 	savedState, ok := session.Get("state").(string)
@@ -59,7 +58,7 @@ func (h *Handler) Callback(c *gin.Context) {
 		return
 	}
 
-	if err := h.usecase.Callback(c, user_id, code, verifier); err != nil {
+	if err := h.usecase.Callback(c, code, verifier); err != nil {
 		slog.Error("failed to callback", "error", err)
 		c.HTML(http.StatusInternalServerError, "result.html", gin.H{
 			"result": "error",

@@ -20,8 +20,8 @@ func (u *Usecase) SignIn() (string, string, url.URL, error) {
 	return state, verifier, redirectURL, nil
 }
 
-func (u *Usecase) Callback(ctx context.Context, userID string, code string, verifier string) error {
-	token, err := u.fitbitClient.Callback(ctx, code, verifier)
+func (u *Usecase) Callback(ctx context.Context, code string, verifier string) error {
+	userID, token, err := u.fitbitClient.Callback(ctx, code, verifier)
 	if err != nil {
 		return fmt.Errorf("failed to get oauth2 config: %w", err)
 	}

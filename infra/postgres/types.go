@@ -17,9 +17,9 @@ type OAuth2Token struct {
 	DeletedAt    gorm.DeletedAt `gorm:"index"`
 }
 
-func fromEntity(dto domain.OAuth2Token) OAuth2Token {
+func fromEntity(userID string, dto domain.OAuth2Token) OAuth2Token {
 	return OAuth2Token{
-		UserID:       dto.UserID,
+		UserID:       userID,
 		AccessToken:  dto.AccessToken,
 		RefreshToken: dto.RefreshToken,
 		Expiry:       dto.Expiry,
@@ -30,7 +30,6 @@ func fromEntity(dto domain.OAuth2Token) OAuth2Token {
 
 func (t OAuth2Token) toEntity() domain.OAuth2Token {
 	return domain.OAuth2Token{
-		UserID:       t.UserID,
 		AccessToken:  t.AccessToken,
 		RefreshToken: t.RefreshToken,
 		Expiry:       t.Expiry,

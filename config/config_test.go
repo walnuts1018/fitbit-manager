@@ -2,6 +2,7 @@ package config
 
 import (
 	"log/slog"
+	"net/url"
 	"reflect"
 	"testing"
 
@@ -9,7 +10,14 @@ import (
 	_ "github.com/joho/godotenv/autoload"
 )
 
-var requiredEnvs = map[string]string{}
+var requiredEnvs = map[string]string{
+	"USER_ID":             "user_id",
+	"CLIENT_ID":           "client_id",
+	"CLIENT_SECRET":       "client_secret",
+	"COOKIE_SECRET":       "cookie_secret___",
+	"INFLUXDB_AUTH_TOKEN": "token",
+	"PSQL_PASSWORD":       "password",
+}
 
 func TestLoad(t *testing.T) {
 	tests := []struct {
@@ -46,6 +54,17 @@ func TestLoad(t *testing.T) {
 				LogLevel: slog.LevelDebug,
 			},
 			wantErr: false,
+		},
+		{
+			name: "check influxdb config",
+			envs: map[string]string{
+				"INFLUXDB_ENDPOINT": "http://dummy:8086",
+			},
+			want: Config{
+				InfluxDBConfig: InfluxDBConfig{
+					Endpoint: *must(url.Parse("http://dummy:8086")),
+				},
+			},
 		},
 	}
 	for _, tt := range tests {
@@ -140,4 +159,11 @@ func Test_equal(t *testing.T) {
 			}
 		})
 	}
+}
+
+func must[T any](t T, err error) T {
+	if err != nil {
+		panic(err)
+	}
+	return t
 }

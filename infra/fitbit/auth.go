@@ -2,6 +2,7 @@ package fitbit
 
 import (
 	"context"
+	"fmt"
 	"net/url"
 
 	"github.com/Code-Hex/synchro"
@@ -68,13 +69,17 @@ func (c *FitbitController) GenerateAuthURL(state string) (url.URL, string, error
 	return *u, verifier, nil
 }
 
-func (c *FitbitController) Callback(ctx context.Context, code string, verifier string) (domain.OAuth2Token, error) {
+func (c *FitbitController) Callback(ctx context.Context, code string, verifier string) (string, domain.OAuth2Token, error) {
 	token, err := c.oauth2.Exchange(ctx, code, oauth2.VerifierOption(verifier))
 	if err != nil {
-		return domain.OAuth2Token{}, err
+		return "", domain.OAuth2Token{}, err
+	}
+	userID, ok := token.Extra("user_id").(string)
+	if !ok {
+		return "", domain.OAuth2Token{}, fmt.Errorf("failed to get user_id")
 	}
 
-	return domain.OAuth2Token{
+	return userID, domain.OAuth2Token{
 		AccessToken:  token.AccessToken,
 		RefreshToken: token.RefreshToken,
 		Expiry:       synchro.In[tz.AsiaTokyo](token.Expiry),

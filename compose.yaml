@@ -11,7 +11,7 @@ services:
     environment:
       LOG_LEVEL: "debug"
       LOG_TYPE: "text"
-      USER_ID: walnuts1018
+      USER_ID: B84M2S
       CLIENT_ID: "23R8DS"
       COOKIE_SECRET: "mock-cookie-secret------"
       PSQL_HOST: postgres
@@ -20,6 +20,7 @@ services:
       PSQL_USER: postgres
       PSQL_PASSWORD: postgres
       PSQL_SSLMODE: disable
+      INFLUXDB_ENDPOINT: http://influxdb:8086
       INFLUXDB_AUTH_TOKEN: token
     volumes:
       - .env:/app/.env
