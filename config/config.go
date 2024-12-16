@@ -13,6 +13,7 @@ type Config struct {
 	ServerPort string     `env:"SERVER_PORT" envDefault:"8080"`
 	LogLevel   slog.Level `env:"LOG_LEVEL"`
 	LogType    LogType    `env:"LOG_TYPE" envDefault:"json"`
+	ServerURL  ServerURL  `env:"SERVER_URL" envDefault:"https://fitbit-manager.local.walnuts.dev/"`
 
 	UserID         UserID         `env:"USER_ID,required"`
 	ClientID       ClientID       `env:"CLIENT_ID,required"`
@@ -30,6 +31,7 @@ func Load() (Config, error) {
 			reflect.TypeOf(time.Duration(0)): returnAny(time.ParseDuration),
 			reflect.TypeOf(LogType("")):      returnAny(ParseLogType),
 			reflect.TypeOf(CookieSecret("")): returnAny(ParseCookieSecret),
+			reflect.TypeOf(ServerURL("")):    returnAny(ParseServerURL),
 		},
 	}); err != nil {
 		return Config{}, err

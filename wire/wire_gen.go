@@ -22,9 +22,13 @@ import (
 // Injectors from wire.go:
 
 func CreateUsecase(ctx context.Context, cfg config.Config) (*usecase.Usecase, func(), error) {
+	serverURL := cfg.ServerURL
 	clientID := cfg.ClientID
 	clientSecret := cfg.ClientSecret
-	fitbitController := fitbit.NewFitbitController(clientID, clientSecret)
+	fitbitController, err := fitbit.NewFitbitController(serverURL, clientID, clientSecret)
+	if err != nil {
+		return nil, nil, err
+	}
 	psqldsn := cfg.PSQLDSN
 	postgresClient, err := postgres.NewPostgres(ctx, psqldsn)
 	if err != nil {
@@ -56,6 +60,7 @@ func CreateRouter(ctx context.Context, cfg config.Config, usecase2 *usecase.Usec
 // wire.go:
 
 var usecaseSet = wire.FieldsOf(new(config.Config),
+	"ServerURL",
 	"ClientID",
 	"ClientSecret",
 	"PSQLDSN",

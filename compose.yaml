@@ -61,3 +61,25 @@ services:
       - DOCKER_INFLUXDB_INIT_RETENTION=1w
       - DOCKER_INFLUXDB_INIT_BUCKET=fitbit_manager
       - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=token
+  nginx:
+    image: nginx:1.27
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - source: ./nginx
+        target: /etc/nginx/conf.d
+        type: bind
+      - source: ./certs
+        target: /etc/certs
+        type: bind
+    networks:
+      - default
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    depends_on:
+      - server

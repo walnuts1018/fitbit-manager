@@ -45,6 +45,7 @@ func CreateRouter(
 }
 
 var usecaseSet = wire.FieldsOf(new(config.Config),
+	"ServerURL",
 	"ClientID",
 	"ClientSecret",
 	"PSQLDSN",

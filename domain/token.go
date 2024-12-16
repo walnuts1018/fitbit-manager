@@ -5,11 +5,6 @@ import (
 	"github.com/Code-Hex/synchro/tz"
 )
 
-const (
-	AuthEndpoint  = "https://www.fitbit.com/oauth2/authorize"
-	TokenEndpoint = "https://api.fitbit.com/oauth2/token"
-)
-
 var (
 	scopes = []string{
 		"activity",

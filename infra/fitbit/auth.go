@@ -39,15 +39,21 @@ type FitbitController struct {
 	oauth2 *oauth2.Config
 }
 
-func NewFitbitController(clientID config.ClientID, clientSecret config.ClientSecret) *FitbitController {
+func NewFitbitController(serverURL config.ServerURL, clientID config.ClientID, clientSecret config.ClientSecret) (*FitbitController, error) {
+	redirectURL, err := url.JoinPath(string(serverURL), "/callback")
+	if err != nil {
+		return nil, err
+	}
+
 	return &FitbitController{
 		oauth2: &oauth2.Config{
 			ClientID:     string(clientID),
 			ClientSecret: string(clientSecret),
 			Endpoint:     oauth2.Endpoint{AuthURL: AuthEndpoint, TokenURL: TokenEndpoint},
 			Scopes:       scopes,
+			RedirectURL:  redirectURL,
 		},
-	}
+	}, nil
 }
 
 func (c *FitbitController) GenerateAuthURL(state string) (url.URL, string, error) {
