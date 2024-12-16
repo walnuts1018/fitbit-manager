@@ -1,0 +1,86 @@
+version: "3"
+services:
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    working_dir: /app
+    tty: true
+    ports:
+      - "8080:8080"
+    environment:
+      LOG_LEVEL: "debug"
+      LOG_TYPE: "text"
+      USER_ID: B84M2S
+      CLIENT_ID: "23R8DS"
+      COOKIE_SECRET: "mock-cookie-secret------"
+      PSQL_HOST: postgres
+      PSQL_PORT: 5432
+      PSQL_DATABASE: fitbit_manager
+      PSQL_USER: postgres
+      PSQL_PASSWORD: postgres
+      PSQL_SSLMODE: disable
+      INFLUXDB_ENDPOINT: http://influxdb:8086
+      INFLUXDB_AUTH_TOKEN: token
+    volumes:
+      - .env:/app/.env
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    depends_on:
+      - postgres
+      - influxdb
+    develop:
+      watch:
+        - action: rebuild
+          path: .
+  postgres:
+    image: postgres:17
+    container_name: psql
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./psql:/docker-entrypoint-initdb.d
+    environment:
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "postgres"
+  influxdb:
+    image: influxdb:2.7
+    container_name: influxdb
+    ports:
+      - 8086:8086
+    volumes:
+      - ./influxdb:/docker-entrypoint-initdb.d
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=admin
+      - DOCKER_INFLUXDB_INIT_PASSWORD=password
+      - DOCKER_INFLUXDB_INIT_ORG=admin
+      - DOCKER_INFLUXDB_INIT_RETENTION=1w
+      - DOCKER_INFLUXDB_INIT_BUCKET=fitbit_manager
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=token
+  nginx:
+    image: nginx:1.27
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - source: ./nginx
+        target: /etc/nginx/conf.d
+        type: bind
+      - source: ./certs
+        target: /etc/certs
+        type: bind
+    networks:
+      - default
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    depends_on:
+      - server

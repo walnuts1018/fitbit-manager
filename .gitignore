@@ -25,3 +25,4 @@ token
 .env
 fitbit-manager
 out/
+certs/

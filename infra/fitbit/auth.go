@@ -2,18 +2,23 @@ package fitbit
 
 import (
 	"context"
-	"net/http"
+	"fmt"
+	"net/url"
 
+	"github.com/Code-Hex/synchro"
+	"github.com/Code-Hex/synchro/tz"
 	"github.com/walnuts1018/fitbit-manager/config"
 	"github.com/walnuts1018/fitbit-manager/domain"
-	"github.com/walnuts1018/fitbit-manager/infra/timeJST"
 	"golang.org/x/oauth2"
 )
 
-var (
+const (
 	AuthEndpoint  = "https://www.fitbit.com/oauth2/authorize"
 	TokenEndpoint = "https://api.fitbit.com/oauth2/token"
-	scopes        = []string{
+)
+
+var (
+	scopes = []string{
 		"activity",
 		"cardio_fitness",
 		"electrocardiogram",
@@ -31,40 +36,54 @@ var (
 	}
 )
 
-type client struct {
-	cfg     *oauth2.Config
-	fclient *http.Client //fitbit client
-	tokenStoreCache domain.TokenStore
+type FitbitController struct {
+	oauth2 *oauth2.Config
 }
 
-func NewOauth2Client() domain.FitbitClient {
-	return &client{
-		cfg: &oauth2.Config{
-			ClientID:     config.Config.ClientID,
-			ClientSecret: config.Config.ClientSecret,
+func NewFitbitController(serverURL config.ServerURL, clientID config.ClientID, clientSecret config.ClientSecret) (*FitbitController, error) {
+	redirectURL, err := url.JoinPath(string(serverURL), "/callback")
+	if err != nil {
+		return nil, err
+	}
+
+	return &FitbitController{
+		oauth2: &oauth2.Config{
+			ClientID:     string(clientID),
+			ClientSecret: string(clientSecret),
 			Endpoint:     oauth2.Endpoint{AuthURL: AuthEndpoint, TokenURL: TokenEndpoint},
 			Scopes:       scopes,
+			RedirectURL:  redirectURL,
 		},
-	}
+	}, nil
 }
 
-func (c *client) Auth(state string) string {
-	url := c.cfg.AuthCodeURL(state, oauth2.AccessTypeOffline)
-	return url
-}
+func (c *FitbitController) GenerateAuthURL(state string) (url.URL, string, error) {
+	verifier := oauth2.GenerateVerifier()
+	s := c.oauth2.AuthCodeURL(state, oauth2.AccessTypeOffline, oauth2.S256ChallengeOption(verifier))
 
-func (c *client) Callback(ctx context.Context, code string) (domain.OAuth2Token, error) {
-	token, err := c.cfg.Exchange(ctx, code)
+	u, err := url.Parse(s)
 	if err != nil {
-		return domain.OAuth2Token{}, err
+		return url.URL{}, "", err
 	}
 
-	cfg := domain.OAuth2Token{
+	return *u, verifier, nil
+}
+
+func (c *FitbitController) Callback(ctx context.Context, code string, verifier string) (string, domain.OAuth2Token, error) {
+	token, err := c.oauth2.Exchange(ctx, code, oauth2.VerifierOption(verifier))
+	if err != nil {
+		return "", domain.OAuth2Token{}, err
+	}
+	userID, ok := token.Extra("user_id").(string)
+	if !ok {
+		return "", domain.OAuth2Token{}, fmt.Errorf("failed to get user_id")
+	}
+
+	return userID, domain.OAuth2Token{
 		AccessToken:  token.AccessToken,
 		RefreshToken: token.RefreshToken,
-		Expiry:       token.Expiry,
-		CreatedAt:    timeJST.Now(),
-		UpdatedAt:    timeJST.Now(),
-	}
-	return cfg, nil
+		Expiry:       synchro.In[tz.AsiaTokyo](token.Expiry),
+		CreatedAt:    synchro.Now[tz.AsiaTokyo](),
+		UpdatedAt:    synchro.Now[tz.AsiaTokyo](),
+	}, nil
 }
