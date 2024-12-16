@@ -10,22 +10,43 @@ import (
 	"context"
 	"github.com/gin-gonic/gin"
 	"github.com/google/wire"
+	"github.com/walnuts1018/fitbit-manager/config"
+	"github.com/walnuts1018/fitbit-manager/infra/fitbit"
+	"github.com/walnuts1018/fitbit-manager/infra/influxdb"
+	"github.com/walnuts1018/fitbit-manager/infra/postgres"
+	"github.com/walnuts1018/fitbit-manager/router"
+	"github.com/walnuts1018/fitbit-manager/router/handler"
+	"github.com/walnuts1018/fitbit-manager/usecase"
 )
 
 // Injectors from wire.go:
 
-func CreateRouter(ctx context.Context, cfg config.Config) (*gin.Engine, error) {
+func CreateUsecase(ctx context.Context, cfg config.Config) (*usecase.Usecase, func(), error) {
+	clientID := cfg.ClientID
+	clientSecret := cfg.ClientSecret
+	fitbitController := fitbit.NewFitbitController(clientID, clientSecret)
 	psqldsn := cfg.PSQLDSN
 	postgresClient, err := postgres.NewPostgres(ctx, psqldsn)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	usecaseUsecase, err := usecase.NewUsecase(postgresClient, postgresClient, postgresClient)
+	influxDBConfig := cfg.InfluxDBConfig
+	influxDBController, cleanup := influxdb.NewInfluxDBController(influxDBConfig)
+	usecaseUsecase := usecase.NewUsecase(fitbitController, postgresClient, influxDBController)
+	return usecaseUsecase, func() {
+		cleanup()
+	}, nil
+}
+
+func CreateRouter(ctx context.Context, cfg config.Config, usecase2 *usecase.Usecase) (*gin.Engine, error) {
+	cookieSecret := cfg.CookieSecret
+	level := cfg.LogLevel
+	userID := cfg.UserID
+	handlerHandler, err := handler.NewHandler(userID, usecase2)
 	if err != nil {
 		return nil, err
 	}
-	resolver := graph.NewResolver(usecaseUsecase)
-	engine, err := router.NewRouter(cfg, resolver)
+	engine, err := router.NewRouter(cookieSecret, level, handlerHandler)
 	if err != nil {
 		return nil, err
 	}
@@ -34,10 +55,21 @@ func CreateRouter(ctx context.Context, cfg config.Config) (*gin.Engine, error) {
 
 // wire.go:
 
-var ConfigSet = wire.FieldsOf(new(config.Config),
+var usecaseSet = wire.FieldsOf(new(config.Config),
+	"ClientID",
+	"ClientSecret",
 	"PSQLDSN",
+	"InfluxDBConfig",
 )
 
-var resolverSet = wire.NewSet(graph.NewResolver, wire.Bind(new(graph.ResolverRoot), new(*graph.Resolver)))
+var routerSet = wire.FieldsOf(new(config.Config),
+	"LogLevel",
+	"UserID",
+	"CookieSecret",
+)
 
-var postgresSet = wire.NewSet(postgres.NewPostgres, wire.Bind(new(usecase.ManifestSouceRepo), new(*postgres.PostgresClient)), wire.Bind(new(usecase.CRDRepo), new(*postgres.PostgresClient)), wire.Bind(new(usecase.SchemaRepo), new(*postgres.PostgresClient)))
+var postgresSet = wire.NewSet(postgres.NewPostgres, wire.Bind(new(usecase.TokenStore), new(*postgres.PostgresClient)))
+
+var fitbitSet = wire.NewSet(fitbit.NewFitbitController, wire.Bind(new(usecase.FitbitClient), new(*fitbit.FitbitController)))
+
+var influxdbSet = wire.NewSet(influxdb.NewInfluxDBController, wire.Bind(new(usecase.DataStore), new(*influxdb.InfluxDBController)))

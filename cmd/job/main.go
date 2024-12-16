@@ -34,16 +34,16 @@ func main() {
 	}
 	defer close()
 
-	router, err := wire.CreateRouter(ctx, cfg)
+	usecase, cleanup, err := wire.CreateUsecase(ctx, cfg)
 	if err != nil {
-		slog.Error("Failed to create router", slog.Any("error", err))
+		slog.Error("Failed to create usecase", slog.Any("error", err))
 		os.Exit(1)
 	}
+	defer cleanup()
 
-	slog.Info("Server is running", slog.String("port", cfg.ServerPort))
-
-	if err := router.Run(fmt.Sprintf(":%s", cfg.ServerPort)); err != nil {
-		slog.Error("Failed to run server", slog.Any("error", err))
+	if err := usecase.RecordHeart(ctx, string(cfg.UserID)); err != nil {
+		slog.Error("Failed to record heart", slog.Any("error", err))
 		os.Exit(1)
 	}
+	os.Exit(0)
 }

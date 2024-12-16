@@ -14,11 +14,10 @@ type Config struct {
 	LogLevel   slog.Level `env:"LOG_LEVEL"`
 	LogType    LogType    `env:"LOG_TYPE" envDefault:"json"`
 
-	ClientID     ClientID     `env:"CLIENT_ID,required"`
-	ClientSecret ClientSecret `env:"CLIENT_SECRET,required"`
-
-	CookieSecret CookieSecret `env:"COOKIE_SECRET,required"`
-
+	UserID         UserID         `env:"USER_ID,required"`
+	ClientID       ClientID       `env:"CLIENT_ID,required"`
+	ClientSecret   ClientSecret   `env:"CLIENT_SECRET,required"`
+	CookieSecret   CookieSecret   `env:"COOKIE_SECRET,required"`
 	PSQLDSN        PSQLDSN        `envPrefix:"PSQL_"`
 	InfluxDBConfig InfluxDBConfig `envPrefix:"INFLUXDB_"`
 }

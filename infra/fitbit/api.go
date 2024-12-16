@@ -14,7 +14,7 @@ import (
 	"golang.org/x/oauth2"
 )
 
-func (c *client) GetName(ctx context.Context, token domain.OAuth2Token) (string, domain.OAuth2Token, error) {
+func (c *FitbitController) GetName(ctx context.Context, token domain.OAuth2Token) (string, domain.OAuth2Token, error) {
 	tokenSource := c.oauth2.TokenSource(ctx, &oauth2.Token{
 		AccessToken:  token.AccessToken,
 		RefreshToken: token.RefreshToken,
@@ -77,7 +77,7 @@ type heartResult struct {
 	} `json:"activities-heart-intraday"`
 }
 
-func (c *client) GetHeartIntraday(ctx context.Context, token domain.OAuth2Token, timeRange domain.FitbitTimeRange, detail domain.HeartDetail) ([]domain.HeartData, error) {
+func (c *FitbitController) GetHeartData(ctx context.Context, token domain.OAuth2Token, timeRange domain.FitbitTimeRange, detail domain.HeartDetail) ([]domain.HeartData, domain.OAuth2Token, error) {
 	tokenSource := c.oauth2.TokenSource(ctx, &oauth2.Token{
 		AccessToken:  token.AccessToken,
 		RefreshToken: token.RefreshToken,
@@ -88,30 +88,30 @@ func (c *client) GetHeartIntraday(ctx context.Context, token domain.OAuth2Token,
 	endpoint := fmt.Sprintf("https://api.fitbit.com/1/user/-/activities/heart/date/%v/1d/%v/time/%v/%v.json", timeRange.Date(), detail, timeRange.StartTime(), timeRange.EndTime())
 	resp, err := httpClient.Get(endpoint)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get heart rate: %w", err)
+		return nil, domain.OAuth2Token{}, fmt.Errorf("failed to get heart rate: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("failed to get heart rate: %v", resp.Status)
+		return nil, domain.OAuth2Token{}, fmt.Errorf("failed to get heart rate: %v", resp.Status)
 	}
 
 	raw, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read response body: %w", err)
+		return nil, domain.OAuth2Token{}, fmt.Errorf("failed to read response body: %w", err)
 	}
 
 	var heart heartResult
 	err = json.Unmarshal(raw, &heart)
 	if err != nil {
-		return nil, fmt.Errorf("failed to unmarshal response body: %w", err)
+		return nil, domain.OAuth2Token{}, fmt.Errorf("failed to unmarshal response body: %w", err)
 	}
 
 	dataset := make([]domain.HeartData, 0, len(heart.ActivitiesHeartIntraday.DataSet))
 	for _, d := range heart.ActivitiesHeartIntraday.DataSet {
 		parsed, err := synchro.ParseISO[tz.AsiaTokyo](timeRange.Date() + "T" + d.Time + "Z")
 		if err != nil {
-			return nil, fmt.Errorf("failed to parse time: %w", err)
+			return nil, domain.OAuth2Token{}, fmt.Errorf("failed to parse time: %w", err)
 		}
 		dataset = append(dataset, domain.HeartData{
 			Time:  parsed,
@@ -119,5 +119,14 @@ func (c *client) GetHeartIntraday(ctx context.Context, token domain.OAuth2Token,
 		})
 	}
 
-	return dataset, nil
+	newtoken, err := tokenSource.Token()
+	if err != nil {
+		return nil, domain.OAuth2Token{}, err
+	}
+
+	return dataset, domain.OAuth2Token{
+		AccessToken:  newtoken.AccessToken,
+		RefreshToken: newtoken.RefreshToken,
+		Expiry:       synchro.In[tz.AsiaTokyo](newtoken.Expiry),
+	}, nil
 }

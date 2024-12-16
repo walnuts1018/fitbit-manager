@@ -35,12 +35,12 @@ var (
 	}
 )
 
-type client struct {
+type FitbitController struct {
 	oauth2 *oauth2.Config
 }
 
-func NewFitbitClient(clientID config.ClientID, clientSecret config.ClientSecret) *client {
-	return &client{
+func NewFitbitController(clientID config.ClientID, clientSecret config.ClientSecret) *FitbitController {
+	return &FitbitController{
 		oauth2: &oauth2.Config{
 			ClientID:     string(clientID),
 			ClientSecret: string(clientSecret),
@@ -50,7 +50,7 @@ func NewFitbitClient(clientID config.ClientID, clientSecret config.ClientSecret)
 	}
 }
 
-func (c *client) GenerateAuthURL(state string) (url.URL, string, error) {
+func (c *FitbitController) GenerateAuthURL(state string) (url.URL, string, error) {
 	verifier := oauth2.GenerateVerifier()
 	s := c.oauth2.AuthCodeURL(state, oauth2.AccessTypeOffline, oauth2.S256ChallengeOption(verifier))
 
@@ -62,7 +62,7 @@ func (c *client) GenerateAuthURL(state string) (url.URL, string, error) {
 	return *u, verifier, nil
 }
 
-func (c *client) Callback(ctx context.Context, code string, verifier string) (domain.OAuth2Token, error) {
+func (c *FitbitController) Callback(ctx context.Context, code string, verifier string) (domain.OAuth2Token, error) {
 	token, err := c.oauth2.Exchange(ctx, code, oauth2.VerifierOption(verifier))
 	if err != nil {
 		return domain.OAuth2Token{}, err

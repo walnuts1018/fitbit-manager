@@ -6,7 +6,7 @@ import (
 
 type PSQLDSN struct {
 	Dsn          string `env:"DSN" envDefault:""`
-	PSQLHost     string `env:"ENDPOINT" envDefault:"localhost"`
+	PSQLHost     string `env:"HOST" envDefault:"localhost"`
 	PSQLPort     string `env:"PORT" envDefault:"5432"`
 	PSQLDatabase string `env:"DATABASE" envDefault:"fitbit_manager"`
 	PSQLUser     string `env:"USER" envDefault:"postgres"`

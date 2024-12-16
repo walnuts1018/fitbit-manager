@@ -11,7 +11,7 @@ import (
 
 func (h *Handler) SignIn(c *gin.Context) {
 	session := sessions.Default(c)
-	state, redirect, err := h.usecase.SignIn()
+	state, verifier, redirectURL, err := h.usecase.SignIn()
 	if err != nil {
 		c.HTML(http.StatusInternalServerError, "result.html", gin.H{
 			"result": "error",
@@ -20,40 +20,49 @@ func (h *Handler) SignIn(c *gin.Context) {
 		return
 	}
 	session.Set("state", state)
+	session.Set("verifier", verifier)
 	session.Save()
 
-	c.Redirect(http.StatusFound, redirect)
+	c.Redirect(http.StatusFound, redirectURL.String())
 }
 
 func (h *Handler) Callback(c *gin.Context) {
 	code := c.Query("code")
 	state := c.Query("state")
+	user_id := c.Query("user_id")
 
 	session := sessions.Default(c)
+	savedState, ok := session.Get("state").(string)
+	if !ok {
+		c.HTML(http.StatusBadRequest, "result.html", gin.H{
+			"result": "error",
+			"error":  "failed to get state",
+		})
+		return
+	}
 
-	if session.Get("state") != state {
+	if state != savedState {
 		c.HTML(http.StatusBadRequest, "result.html", gin.H{
 			"result": "error",
 			"error":  "invalid state",
 		})
 		return
 	}
-	err := h.usecase.Callback(c, code)
-	if err != nil {
-		slog.Error("failed to callback", "error", err)
-		c.HTML(http.StatusInternalServerError, "result.html", gin.H{
+
+	verifier, ok := session.Get("verifier").(string)
+	if !ok {
+		c.HTML(http.StatusBadRequest, "result.html", gin.H{
 			"result": "error",
-			"error":  "failed to callback",
+			"error":  "failed to get verifier",
 		})
 		return
 	}
 
-	err = h.usecase.NewFitbitClient(c)
-	if err != nil {
-		slog.Error("failed to create fitbit client", "error", err)
+	if err := h.usecase.Callback(c, user_id, code, verifier); err != nil {
+		slog.Error("failed to callback", "error", err)
 		c.HTML(http.StatusInternalServerError, "result.html", gin.H{
 			"result": "error",
-			"error":  "failed to create fitbit client",
+			"error":  "failed to callback",
 		})
 		return
 	}

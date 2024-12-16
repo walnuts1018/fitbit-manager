@@ -1,7 +1,41 @@
 version: "3"
 services:
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    working_dir: /app
+    tty: true
+    ports:
+      - "8080:8080"
+    environment:
+      LOG_LEVEL: "debug"
+      LOG_TYPE: "text"
+      USER_ID: walnuts1018
+      CLIENT_ID: "23R8DS"
+      COOKIE_SECRET: "mock-cookie-secret-----"
+      PSQL_HOST: postgres
+      PSQL_PORT: 5432
+      PSQL_DATABASE: fitbit_manager
+      PSQL_USER: postgres
+      PSQL_PASSWORD: postgres
+      PSQL_SSLMODE: disable
+      INFLUXDB_AUTHTOKEN: token
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    depends_on:
+      - postgres
+      - influxdb
+    develop:
+      watch:
+        - action: rebuild
+          path: .
   postgres:
-    image: postgres:16
+    image: postgres:17
     container_name: psql
     ports:
       - "5432:5432"
@@ -10,8 +44,6 @@ services:
     environment:
       POSTGRES_USER: "postgres"
       POSTGRES_PASSWORD: "postgres"
-      INFLUXDB_AUTH_TOKEN: "token"
-
   influxdb:
     image: influxdb:2.7
     container_name: influxdb

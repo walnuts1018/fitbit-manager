@@ -5,14 +5,16 @@ import (
 	"fmt"
 	"log/slog"
 
+	"github.com/Code-Hex/synchro"
+	"github.com/Code-Hex/synchro/tz"
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 	"github.com/influxdata/influxdb-client-go/v2/api"
 	"github.com/walnuts1018/fitbit-manager/config"
 	"github.com/walnuts1018/fitbit-manager/domain"
-	"github.com/walnuts1018/fitbit-manager/infra/timeJST"
+	"github.com/walnuts1018/fitbit-manager/usecase"
 )
 
-type client struct {
+type InfluxDBController struct {
 	influxdbClient influxdb2.Client
 	bucket         string
 
@@ -20,25 +22,29 @@ type client struct {
 	writeAPI api.WriteAPIBlocking
 }
 
-func NewClient(cfg config.InfluxDBConfig) client {
+func NewInfluxDBController(cfg config.InfluxDBConfig) (*InfluxDBController, func()) {
 	c := influxdb2.NewClient(cfg.Endpoint, cfg.AuthToken)
 	w := c.WriteAPIBlocking(cfg.Org, cfg.Bucket)
 	q := c.QueryAPI(cfg.Org)
-	return client{
-		influxdbClient: c,
-		bucket:         cfg.Bucket,
-		queryAPI:       q,
-		writeAPI:       w,
-	}
+	return &InfluxDBController{
+			influxdbClient: c,
+			bucket:         cfg.Bucket,
+			queryAPI:       q,
+			writeAPI:       w,
+		}, func() {
+			c.Close()
+		}
 }
 
-func (c client) Close() {
-	c.influxdbClient.Close()
-}
+const (
+	measurementKey = "heart"
+	rateKey        = "rate"
+	userKey        = "user"
+)
 
-func (c client) RecordHeart(ctx context.Context, hearts []domain.HeartData) error {
+func (c *InfluxDBController) RecordHeart(ctx context.Context, userID string, hearts []domain.HeartData) error {
 	for _, heart := range hearts {
-		p := influxdb2.NewPointWithMeasurement("heart").AddField("rate", heart.Value).SetTime(*heart.Datatime)
+		p := influxdb2.NewPointWithMeasurement(measurementKey).AddField(rateKey, heart.Value).AddTag(userKey, userID).SetTime(heart.Time.StdTime())
 		c.writeAPI.WritePoint(context.Background(), p)
 	}
 
@@ -50,9 +56,9 @@ func (c client) RecordHeart(ctx context.Context, hearts []domain.HeartData) erro
 	return nil
 }
 
-func (c client) GetLastHeartData(ctx context.Context) (domain.HeartData, error) {
+func (c *InfluxDBController) GetLatestHeartData(ctx context.Context, userID string) (domain.HeartData, error) {
 	h := domain.HeartData{}
-	query := fmt.Sprintf(`from(bucket:"%v") |> range(start: -24h) |> filter(fn: (r) => r._measurement == "heart") |> last()`, c.bucket)
+	query := fmt.Sprintf(`from(bucket:"%v") |> range(start: 0) |> filter(fn: (r) => r._measurement == %v) |> filter(fn: (r) => r.%v == %v) |> last()`, c.bucket, measurementKey, userKey, userID)
 	result, err := c.queryAPI.Query(ctx, query)
 	if err != nil {
 		return h, fmt.Errorf("failed to query: %w", err)
@@ -64,11 +70,15 @@ func (c client) GetLastHeartData(ctx context.Context) (domain.HeartData, error) 
 			return domain.HeartData{}, fmt.Errorf("failed to parse value: %v", result.Record().Value())
 		}
 		h.Value = int(v)
-		t := result.Record().Time().In(timeJST.JST)
-		h.Datatime = &t
+		h.Time = synchro.In[tz.AsiaTokyo](result.Record().Time())
 	}
 	if result.Err() != nil {
 		return domain.HeartData{}, fmt.Errorf("query parsing error: %w", result.Err())
 	}
+
+	if h == (domain.HeartData{}) {
+		return domain.HeartData{}, usecase.ErrNotFound
+	}
+
 	return h, nil
 }

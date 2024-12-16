@@ -8,7 +8,7 @@ import (
 )
 
 func (h *Handler) GetHeart(c *gin.Context) {
-	heart, t, err := h.usecase.GetHeartNow(c)
+	data, err := h.usecase.GetHeartNow(c, h.defaultUserID)
 	if err != nil {
 		slog.Error("failed to get heart", "error", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -17,7 +17,7 @@ func (h *Handler) GetHeart(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{
-		"heart": heart,
-		"time":  t,
+		"heart": data.Value,
+		"time":  data.Time,
 	})
 }
