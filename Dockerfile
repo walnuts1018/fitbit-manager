@@ -25,10 +25,12 @@ RUN --mount=type=cache,target=/var/lib/apt,sharing=locked \
     --mount=type=cache,target=/var/cache/apt,sharing=locked \
     apt-get -y update && apt-get install -y ca-certificates
 
+COPY  ./templates/ /app/templates/
+COPY  ./assets/ /app/assets/
+
 COPY --from=builder /build/fitbit-manager ./
 COPY --from=builder /build/fitbit-manager-job ./
-COPY --from=builder /build/templates/ /app/templates/
-COPY --from=builder /build/assets/ /app/assets/
+
 
 CMD ["./fitbit-manager"]
 LABEL org.opencontainers.image.source = "https://github.com/walnuts1018/fitbit-manager"
