@@ -18,7 +18,7 @@ func (p *PostgresClient) SaveOAuth2Token(ctx context.Context, userID string, tok
 
 func (p *PostgresClient) GetOAuth2Token(ctx context.Context, userID string) (domain.OAuth2Token, error) {
 	var token OAuth2Token
-	result := p.DB(ctx).First(&token, userID)
+	result := p.DB(ctx).First(&token, "user_id = ?", userID)
 	if result.Error != nil {
 		return domain.OAuth2Token{}, fmt.Errorf("failed to get token: %w", result.Error)
 	}
