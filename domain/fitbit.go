@@ -6,9 +6,8 @@ import (
 )
 
 type HeartData struct {
-	Datatime *synchro.Time[tz.AsiaTokyo]
-	Time     string `json:"time"`
-	Value    int    `json:"value"`
+	Time  synchro.Time[tz.AsiaTokyo]
+	Value int `json:"value"`
 }
 
 type HeartDetail string

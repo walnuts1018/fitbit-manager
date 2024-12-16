@@ -68,9 +68,12 @@ type heartResult struct {
 		Value string `json:"value"`
 	} `json:"activities-heart"`
 	ActivitiesHeartIntraday struct {
-		DataSet         []domain.HeartData `json:"dataset"`
-		DatasetInterval int                `json:"datasetInterval"`
-		DatasetType     string             `json:"datasetType"`
+		DataSet []struct {
+			Time  string `json:"time"`
+			Value int    `json:"value"`
+		} `json:"dataset"`
+		DatasetInterval int    `json:"datasetInterval"`
+		DatasetType     string `json:"datasetType"`
 	} `json:"activities-heart-intraday"`
 }
 
@@ -103,5 +106,18 @@ func (c *client) GetHeartIntraday(ctx context.Context, token domain.OAuth2Token,
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response body: %w", err)
 	}
-	return heart.ActivitiesHeartIntraday.DataSet, nil
+
+	dataset := make([]domain.HeartData, 0, len(heart.ActivitiesHeartIntraday.DataSet))
+	for _, d := range heart.ActivitiesHeartIntraday.DataSet {
+		parsed, err := synchro.ParseISO[tz.AsiaTokyo](timeRange.Date() + "T" + d.Time + "Z")
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse time: %w", err)
+		}
+		dataset = append(dataset, domain.HeartData{
+			Time:  parsed,
+			Value: d.Value,
+		})
+	}
+
+	return dataset, nil
 }

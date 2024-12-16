@@ -9,7 +9,6 @@ import (
 	"github.com/Code-Hex/synchro"
 	"github.com/Code-Hex/synchro/tz"
 	"github.com/walnuts1018/fitbit-manager/domain"
-	"github.com/walnuts1018/fitbit-manager/infra/timeJST"
 )
 
 func (u *Usecase) GetHeart(ctx context.Context, from, to synchro.Time[tz.AsiaTokyo], detail domain.HeartDetail) ([]domain.HeartData, error) {
