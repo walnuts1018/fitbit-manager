@@ -16,6 +16,7 @@ func (h *Handler) GetHeart(c *gin.Context) {
 		})
 		return
 	}
+	c.Header("Cache-Control", "no-store")
 	c.JSON(http.StatusOK, gin.H{
 		"heart": data.Value,
 		"time":  data.Time,
