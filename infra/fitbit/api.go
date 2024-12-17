@@ -11,6 +11,8 @@ import (
 	"github.com/Code-Hex/synchro"
 	"github.com/Code-Hex/synchro/tz"
 	"github.com/walnuts1018/fitbit-manager/domain"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/propagation"
 	"golang.org/x/oauth2"
 )
 
@@ -23,7 +25,13 @@ func (c *FitbitController) GetName(ctx context.Context, token domain.OAuth2Token
 	})
 
 	httpClient := oauth2.NewClient(ctx, tokenSource)
-	resp, err := httpClient.Get("https://api.fitbit.com/1/user/-/profile.json")
+	req, err := http.NewRequestWithContext(ctx, "GET", "https://api.fitbit.com/1/user/-/profile.json", nil)
+	if err != nil {
+		return "", domain.OAuth2Token{}, fmt.Errorf("failed to create request: %w", err)
+	}
+	otel.GetTextMapPropagator().Inject(ctx, propagation.HeaderCarrier(req.Header))
+
+	resp, err := httpClient.Do(req)
 	if err != nil {
 		return "", domain.OAuth2Token{}, err
 	}
@@ -88,7 +96,13 @@ func (c *FitbitController) GetHeartData(ctx context.Context, token domain.OAuth2
 
 	// デバイスのタイムゾーンで指定する雰囲気があるので、Asia/TokyoでのHH:mmを指定するべき
 	endpoint := fmt.Sprintf("https://api.fitbit.com/1/user/-/activities/heart/date/%v/1d/%v/time/%v/%v.json", timeRange.Date(), detail, timeRange.StartTime(), timeRange.EndTime())
-	resp, err := httpClient.Get(endpoint)
+	req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil)
+	if err != nil {
+		return nil, domain.OAuth2Token{}, fmt.Errorf("failed to create request: %w", err)
+	}
+	otel.GetTextMapPropagator().Inject(ctx, propagation.HeaderCarrier(req.Header))
+
+	resp, err := httpClient.Do(req)
 	if err != nil {
 		return nil, domain.OAuth2Token{}, fmt.Errorf("failed to get heart rate: %w", err)
 	}
