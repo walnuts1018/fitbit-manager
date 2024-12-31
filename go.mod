@@ -1,10 +1,10 @@
 module github.com/walnuts1018/fitbit-manager
 
-go 1.23.3
+go 1.23.4
 
 require (
 	dario.cat/mergo v1.0.1
-	github.com/Code-Hex/synchro v0.5.2
+	github.com/Code-Hex/synchro v0.5.3
 	github.com/caarlos0/env/v11 v11.3.1
 	github.com/gin-contrib/sessions v1.0.2
 	github.com/gin-gonic/gin v1.10.0
@@ -46,7 +46,7 @@ require (
 	github.com/gorilla/sessions v1.2.2 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.24.0 // indirect
 	github.com/influxdata/line-protocol v0.0.0-20200327222509-2487e7298839 // indirect
-	github.com/itchyny/timefmt-go v0.1.5 // indirect
+	github.com/itchyny/timefmt-go v0.1.6 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20221227161230-091c0ba34f0a // indirect
 	github.com/jackc/pgx/v5 v5.5.5 // indirect
