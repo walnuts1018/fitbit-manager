@@ -26,14 +26,6 @@ jobs:
         with:
           version: latest
 
-      - name: Cache Docker layers
-        uses: actions/cache@v4
-        with:
-          path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx
-          restore-keys: |
-            ${{ runner.os }}-buildx
-
       - name: Get Tag from Release
         id: GetTag
         run: |
@@ -45,8 +37,8 @@ jobs:
           push: true
           context: .
           platforms: linux/amd64,linux/arm64
-          cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,dest=/tmp/.buildx-cache
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           tags: |
             ghcr.io/walnuts1018/fitbit-manager:latest
             ghcr.io/walnuts1018/fitbit-manager:${{ steps.GetTag.outputs.ImageTag }}
