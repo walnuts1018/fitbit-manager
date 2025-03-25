@@ -5,13 +5,20 @@ on:
 
 jobs:
   build:
-    name: Build Fitbit-Manager Custom Docker Image
-    runs-on: ubuntu-latest
-    outputs:
-      ImageTag: ${{ steps.GetTag.outputs.ImageTag }}
+    name: Build Docker Image
+    strategy:
+      matrix:
+        include:
+          - key: linux-amd64
+            os: ubuntu-latest
+            platform: linux/amd64
+          - key: linux-arm64
+            os: ubuntu-24.04-arm
+            platform: linux/arm64
+    runs-on: ${{ matrix.os }}
     steps:
       - name: Check out
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3.4.0
@@ -26,38 +33,58 @@ jobs:
         with:
           version: latest
 
-      - name: Get Tag from Release
-        id: GetTag
-        run: |
-          echo "ImageTag=${{ github.ref_name }}" >> $GITHUB_OUTPUT
-
       - name: Build and push Docker images
         uses: docker/build-push-action@471d1dc4e07e5cdedd4c2171150001c434f0b7a4 # v6.15.0
+        id: build
         with:
-          push: true
           context: .
-          platforms: linux/amd64,linux/arm64
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          tags: |
-            ghcr.io/walnuts1018/fitbit-manager:latest
-            ghcr.io/walnuts1018/fitbit-manager:${{ steps.GetTag.outputs.ImageTag }}
+          platforms: ${{ matrix.platform }}
+          outputs: type=image,name=ghcr.io/walnuts1018/fitbit-manager,push-by-digest=true,name-canonical=true,push=true
+          cache-from: type=gha,scope=${{ matrix.key }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.key }}
 
-  scan:
+      - name: Export digest
+        run: |
+          mkdir -p /tmp/digests
+          digest="${{ steps.build.outputs.digest }}"
+          touch "/tmp/digests/${digest#sha256:}"
+
+      - name: Upload digest
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: digests-${{ matrix.key }}
+          path: /tmp/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  merge:
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@6c175e9c4083a92bbca2f9724c8a5e33bc2d97a5 # 0.30.0
+      - name: Download digests
+        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
         with:
-          image-ref: "ghcr.io/walnuts1018/fitbit-manager:${{ needs.build.outputs.ImageTag }}"
-          format: "sarif"
-          ignore-unfixed: true
-          vuln-type: "os,library"
-          severity: "CRITICAL,HIGH"
-          output: "trivy-results.sarif"
+          path: /tmp/digests
+          pattern: digests-*
+          merge-multiple: true
 
-      - name: Upload Trivy scan results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@1b549b9259bda1cb5ddde3b41741a82a2d15a841 # v3.28.13
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@b5ca514318bd6ebac0fb2aedd5d36ec1b5c232a2 # v3.10.0
+
+      - name: Login to ghcr.io
+        uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3.4.0
         with:
-          sarif_file: "trivy-results.sarif"
+          registry: ghcr.io
+          username: walnuts1018
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get Tag from Release
+        run: echo "ImageTag=${GITHUB_REF##*/}" >> $GITHUB_ENV
+
+      - name: Create manifest list and push
+        working-directory: /tmp/digests
+        run: |
+          docker buildx imagetools create \
+            -t ghcr.io/walnuts1018/fitbit-manager:latest \
+            -t ghcr.io/walnuts1018/fitbit-manager:${{ env.ImageTag }} \
+            $(printf 'ghcr.io/walnuts1018/fitbit-manager@sha256:%s ' *)
