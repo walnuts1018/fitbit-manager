@@ -22,7 +22,7 @@ require (
 	golang.org/x/oauth2 v0.29.0
 	gorm.io/driver/postgres v1.5.11
 	gorm.io/gorm v1.25.12
-	gorm.io/plugin/opentelemetry v0.1.13
+	gorm.io/plugin/opentelemetry v0.1.14
 )
 
 require (
