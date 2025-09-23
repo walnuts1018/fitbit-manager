@@ -4,7 +4,7 @@ go 1.24.3
 
 require (
 	dario.cat/mergo v1.0.2
-	github.com/Code-Hex/synchro v0.5.3
+	github.com/Code-Hex/synchro v0.5.4
 	github.com/caarlos0/env/v11 v11.3.1
 	github.com/gin-contrib/sessions v1.0.4
 	github.com/gin-gonic/gin v1.10.1
