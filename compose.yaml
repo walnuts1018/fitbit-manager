@@ -64,7 +64,7 @@ services:
       - DOCKER_INFLUXDB_INIT_BUCKET=fitbit_manager
       - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=token
   nginx:
-    image: nginx:1.28
+    image: nginx:1.29
     ports:
       - "80:80"
       - "443:443"
