@@ -23,10 +23,6 @@ RUN --mount=type=cache,target=/go/pkg/mod/ \
 FROM gcr.io/distroless/cc-debian13:nonroot
 WORKDIR /app
 
-RUN --mount=type=cache,target=/var/lib/apt,sharing=locked \
-    --mount=type=cache,target=/var/cache/apt,sharing=locked \
-    apt-get -y update && apt-get install -y ca-certificates
-
 COPY  ./templates/ /app/templates/
 COPY  ./assets/ /app/assets/
 
@@ -34,4 +30,4 @@ COPY --from=builder /build/fitbit-manager ./
 COPY --from=builder /build/fitbit-manager-job ./
 
 CMD ["./fitbit-manager"]
-LABEL org.opencontainers.image.source = "https://github.com/walnuts1018/fitbit-manager"
+LABEL org.opencontainers.image.source "https://github.com/walnuts1018/fitbit-manager"
