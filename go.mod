@@ -11,7 +11,7 @@ require (
 	github.com/google/wire v0.7.0
 	github.com/influxdata/influxdb-client-go/v2 v2.14.0
 	github.com/joho/godotenv v1.5.1
-	github.com/lib/pq v1.10.9
+	github.com/lib/pq v1.11.1
 	github.com/phsym/console-slog v0.3.1
 	github.com/samber/slog-gin v1.18.0
 	go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin v0.64.0
