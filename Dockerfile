@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1.20
+# syntax=docker/dockerfile:1.24
 FROM golang:1.25.7-bookworm AS builder
 
 ENV ROOT=/build
