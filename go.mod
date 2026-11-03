@@ -1,11 +1,11 @@
 module github.com/walnuts1018/fitbit-manager
 
-go 1.25.0
+go 1.26.0
 
 require (
 	dario.cat/mergo v1.0.2
 	github.com/Code-Hex/synchro v0.5.4
-	github.com/caarlos0/env/v11 v11.3.1
+	github.com/caarlos0/env/v11 v11.4.2
 	github.com/gin-contrib/sessions v1.0.4
 	github.com/gin-gonic/gin v1.11.0
 	github.com/google/wire v0.7.0
