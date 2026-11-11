@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.20
-FROM golang:1.25.7-bookworm AS builder
+FROM golang:1.27.4-bookworm@sha256:4fa7c968ba93f1635670522dbb01a2c78150443e1385746924566079f36570ea AS builder
 
 ENV ROOT=/build
 RUN mkdir ${ROOT}
