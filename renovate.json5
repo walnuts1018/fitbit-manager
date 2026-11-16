@@ -1,17 +1,25 @@
 {
-  $schema: "https://docs.renovatebot.com/renovate-schema.json",
-  extends: ["github>walnuts1018/renovate-config"],
-  dependencyDashboard: true,
-  timezone: "Asia/Tokyo",
+  $schema: 'https://docs.renovatebot.com/renovate-schema.json',
+  extends: [
+    'github>walnuts1018/renovate-config',
+  ],
+  dependencyDashboard: {
+    enabled: true,
+  },
+  timezone: 'Asia/Tokyo',
   packageRules: [
     {
-      matchUpdateTypes: ["patch"],
-      matchCurrentVersion: "!/^0/",
+      matchUpdateTypes: [
+        'patch',
+      ],
+      matchCurrentVersion: '!/^0/',
       automerge: true,
     },
   ],
-  internalChecksFilter: "none",
+  internalChecksFilter: 'none',
   prHourlyLimit: 0,
   prConcurrentLimit: 100,
-  assignees: ["walnuts1018"],
+  assignees: [
+    'walnuts1018',
+  ],
 }
