@@ -39,7 +39,7 @@ services:
         - action: rebuild
           path: .
   postgres:
-    image: postgres:18
+    image: postgres:19
     container_name: psql
     ports:
       - "5432:5432"
